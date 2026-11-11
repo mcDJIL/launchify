@@ -120,13 +120,13 @@ export default function TopUp() {
               <form onSubmit={handleRequestTopup}>
                 <div className="mb-6">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Nominal Top-Up (Minimal Rp 10.000)
+                    Nominal Top-Up (Minimal Rp 5.000)
                   </label>
                   <div className="relative">
                     <span className="absolute left-4 top-3 text-gray-500 font-semibold">Rp</span>
                     <input 
                       type="number" 
-                      min="10000"
+                      min="5000"
                       required
                       className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-lg font-medium"
                       value={baseAmount}

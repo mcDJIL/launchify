@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Rocket, Wallet, Github, Terminal, Zap, Server } from 'lucide-react';
+import { Rocket, Wallet, FolderGit2, Terminal, Zap, Server } from 'lucide-react';
 
 export default function LandingPage() {
   return (
@@ -10,7 +10,7 @@ export default function LandingPage() {
         <div className="flex items-center justify-between px-8 py-4 max-w-7xl mx-auto">
           <div className="text-2xl font-bold text-blue-700 flex items-center gap-2">
             <Server className="w-8 h-8" />
-            SudoPaaS
+            Launchify
           </div>
           
           {/* Link Section Navigation (Disembunyikan di layar HP) */}
@@ -77,7 +77,7 @@ export default function LandingPage() {
               desc="Sistem tagihan per jam. Kalau tugas atau demo praktikum sudah selesai, matikan servernya agar saldo berhenti terpotong."
             />
             <FeatureCard 
-              icon={<Github className="w-8 h-8 text-gray-800" />}
+              icon={<FolderGit2 className="w-8 h-8 text-gray-800" />}
               title="Auto-Build dari GitHub"
               desc="Tinggal masukkan URL repositori. Kami otomatis menjalankan environment Docker dan memberikan URL aktif."
             />
