@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('billing_ledgers', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('project_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('description');
+            $table->decimal('amount', 15, 2);
+            $table->enum('type', ['credit', 'debit']); // credit = masuk, debit = keluar/potong saldo
             $table->timestamps();
         });
     }

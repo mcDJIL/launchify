@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('deployments', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('project_id')->constrained()->cascadeOnDelete();
+            $table->enum('action', ['build', 'start', 'stop', 'restart']);
+            $table->enum('status', ['pending', 'processing', 'success', 'failed'])->default('pending');
+            $table->text('log_output')->nullable();
+            $table->integer('duration_seconds')->nullable();
             $table->timestamps();
         });
     }

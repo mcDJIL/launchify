@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('plans', function (Blueprint $table) {
             $table->id();
+            $table->string('name'); // Contoh: Free, Developer, Enterprise
+            $table->integer('ram_mb');
+            $table->integer('cpu_cores');
+            $table->integer('storage_gb');
+            $table->decimal('price_per_hour', 10, 2); // Biaya pemotongan per jam
             $table->timestamps();
         });
     }

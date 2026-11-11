@@ -12,7 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('topup_transactions', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->decimal('base_amount', 15, 2);
+            // Menyimpan kode unik seperti 63 yang ditambahkan ke nominal
+            $table->integer('unique_code'); 
+            $table->decimal('total_transfer', 15, 2);
+            $table->string('proof_image')->nullable();
+            $table->enum('status', ['pending', 'verifying', 'approved', 'rejected'])->default('pending');
             $table->timestamps();
         });
     }

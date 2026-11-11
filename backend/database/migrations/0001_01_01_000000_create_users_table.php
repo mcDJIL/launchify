@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            // Tambahan untuk fitur Pay-As-You-Go
+            $table->decimal('wallet_balance', 15, 2)->default(0);
             $table->rememberToken();
             $table->timestamps();
         });
