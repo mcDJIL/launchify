@@ -1,11 +1,11 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import Login from './pages/LoginPage';
+import Register from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import TopUp from './pages/TopUp';
-import CreateProject from './pages/CreateProject';
+import CreateProject from './pages/CreateProjects';
 
 function App() {
   return (
