@@ -26,4 +26,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/topup/{id}/approve', [TopupTransactionController::class, 'approve']);
 
     Route::post('/projects/{id}/deploy', [DeploymentController::class, 'trigger']);
+    Route::get('/projects/{id}/logs', [DeploymentController::class, 'logs']);
 });
