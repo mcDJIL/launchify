@@ -15,11 +15,11 @@ class TopupTransactionController extends Controller
     public function requestTopup(Request $request)
     {
         $request->validate([
-            'base_amount' => 'required|numeric|min:10000',
+            'base_amount' => 'required|numeric|min:5000',
         ]);
 
         // Menggunakan akhiran 63 sesuai 2 digit terakhir NRP
-        $uniqueCode = rand(1, 9) * 100 + 63; 
+        $uniqueCode = 63; 
         $totalTransfer = $request->base_amount + $uniqueCode;
 
         $transaction = $request->user()->topups()->create([
