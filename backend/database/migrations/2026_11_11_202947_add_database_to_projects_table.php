@@ -25,7 +25,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('projects', function (Blueprint $table) {
-            //
+            $table->dropColumn(['db_type', 'db_name', 'db_user', 'db_password']);
         });
     }
 };
