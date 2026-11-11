@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Plan;
 use App\Models\Project;
 use Illuminate\Http\Request;
 
@@ -21,16 +22,45 @@ class ProjectController extends Controller
             'plan_id' => 'required|exists:plans,id',
             'name' => 'required|string|max:255',
             'github_url' => 'required|url',
-            'docker_port' => 'required|integer|min:1024|max:65535'
+            'docker_port' => 'required|integer|min:1024|max:65535',
+            'db_type' => 'required|string|exists:plans,code',
+            'db_name' => 'required|string|max:255',
+            'db_user' => 'required|string|max:255',
+            'db_password' => 'required|string|max:255',
+            'framework' => 'required|string|exists:plans,code',
+            'custom_env' => 'nullable|string',
+            'host_port' => 'nullable|integer|min:1024|max:65535',
+            'status' => 'nullable|in:active,suspended,stopped'
         ]);
 
-        // Status default akan otomatis 'stopped' berdasarkan struktur migration
-        $project = $request->user()->projects()->create($validated);
+        $frameworkPlan = Plan::where('type', 'framework')->where('code', $request->framework)->first();
+        $dbPlan = Plan::where('type', 'database')->where('code', $request->db_type)->first();
 
-        return response()->json([
-            'message' => 'Project berhasil didaftarkan',
-            'data' => $project
-        ], 201);
+        if (!$frameworkPlan || !$dbPlan) {
+            return response()->json(['message' => 'Framework atau database tidak valid'], 422);
+        }
+
+        $basePrice = $frameworkPlan ? $frameworkPlan->price_per_hour : 100;
+        $dbPrice = $dbPlan ? $dbPlan->price_per_hour : 0;
+        
+        $hourlyRate = $basePrice + $dbPrice;
+
+        $project = $request->user()->projects()->create([
+            'name' => $request->name,
+            'github_url' => $request->github_url,
+            'docker_port' => $request->docker_port,
+            'framework' => $request->framework,
+            'db_type' => $request->db_type,
+            'db_name' => $request->db_name,
+            'db_user' => $request->db_user,
+            'db_password' => $request->db_password,
+            'custom_env' => $request->custom_env,
+            'host_port' => $request->host_port,
+            'hourly_rate' => $hourlyRate, // Simpan hasil kalkulasi di sini
+            'status' => 'stopped'
+        ]);
+
+        return response()->json(['message' => 'Project berhasil dibuat', 'data' => $project], 201);
     }
 
     public function show(Request $request, string $id)
@@ -48,7 +78,8 @@ class ProjectController extends Controller
             'plan_id' => 'sometimes|exists:plans,id',
             'name' => 'sometimes|string|max:255',
             'github_url' => 'sometimes|url',
-            'docker_port' => 'sometimes|integer|min:1024|max:65535'
+            'docker_port' => 'sometimes|integer|min:1024|max:65535',
+            'host_port' => 'sometimes|integer|min:1024|max:65535'
         ]);
 
         $project->update($validated);
