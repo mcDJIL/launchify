@@ -103,4 +103,20 @@ class TopupTransactionController extends Controller
             ], 500);
         }
     }
+
+    public function reject(Request $request, string $id)
+    {
+        // Opsional: Validasi bahwa user yang request adalah Admin (bisa via middleware nanti)
+        
+        $transaction = TopupTransaction::where('id', $id)
+                            ->where('status', 'verifying')
+                            ->firstOrFail();
+
+        $transaction->update(['status' => 'rejected']);
+
+        return response()->json([
+            'message' => 'Transaksi berhasil ditolak.',
+            'data' => $transaction
+        ]);
+    }
 }
