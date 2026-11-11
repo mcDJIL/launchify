@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->string('name');
             $table->string('github_url');
             $table->integer('docker_port');
+            $table->string('framework')->default('html'); // Pilihan: html, php, laravel, express, react, vue, golang
             $table->enum('status', ['active', 'suspended', 'stopped'])->default('stopped');
             $table->timestamps();
         });

@@ -9,7 +9,7 @@ class Project extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'plan_id', 'name', 'github_url', 'docker_port', 'status'];
+    protected $fillable = ['user_id', 'plan_id', 'name', 'github_url', 'docker_port', 'status', 'db_type', 'db_name', 'db_user', 'db_passwords', 'framework', 'custom_env'];
 
     public function user()
     {

@@ -36,7 +36,7 @@ class DeploymentController extends Controller
         try {
             // 2. Dapatkan string perintah bash (script Docker)
             $command = $this->getBashCommand($request->action, $project);
-            
+
             // 3. Eksekusi perintah ke OS menggunakan Symfony Process
             $process = Process::fromShellCommandline($command);
             $process->setTimeout(300); // Beri batas waktu 5 menit untuk proses build
@@ -81,15 +81,48 @@ class DeploymentController extends Controller
      */
     private function getBashCommand($action, $project)
     {
-        // Direktori tempat kita akan menyimpan clone repository di VPS
         $workdir = "/var/www/paas_projects/project_{$project->id}";
+        $port = $project->docker_port;
         
+        if ($action === 'build') {
+            
+            // 1. Rangkai isi .env (Custom dari User + Auto Database)
+            $envContent = $project->custom_env ?? "";
+            
+            if ($project->db_type === 'mysql') {
+                $envContent .= "\n\n# Auto-Injected Database\nDB_CONNECTION=mysql\nDB_HOST=db\nDB_PORT=3306\nDB_DATABASE={$project->db_name}\nDB_USERNAME={$project->db_user}\nDB_PASSWORD={$project->db_password}\n";
+            } elseif ($project->db_type === 'postgresql') {
+                $envContent .= "\n\n# Auto-Injected Database\nDB_CONNECTION=pgsql\nDB_HOST=db\nDB_PORT=5432\nDB_DATABASE={$project->db_name}\nDB_USERNAME={$project->db_user}\nDB_PASSWORD={$project->db_password}\n";
+            }
+
+            // Trik DevOps: Encode ke Base64 agar karakter unik ($, &, ") di .env tidak merusak shell script
+            $envBase64 = base64_encode($envContent);
+
+            // 2. Generate Dockerfile (Sama seperti sebelumnya)
+            $dockerfileContent = match($project->framework) {
+                'laravel' => "FROM php:8.2-fpm\\nRUN apt-get update && apt-get install -y pdo_mysql pdo_pgsql\\nCOPY . .\\nCMD [\"php-fpm\"]",
+                // ... (framework lain tetap sama)
+                default => "FROM nginx:alpine\\nCOPY . /usr/share/nginx/html"
+            };
+
+            // 3. Generate docker-compose.yml (Environment DB pindah ke .env, compose jadi lebih bersih)
+            $composeContent = "version: '3.8'\\nservices:\\n  app:\\n    build: .\\n    container_name: app_{$project->id}\\n    ports:\\n      - '{$port}:80'\\n";
+            
+            if ($project->db_type === 'mysql') {
+                $composeContent .= "  db:\\n    image: mysql:8.0\\n    container_name: db_{$project->id}\\n    environment:\\n      MYSQL_DATABASE: {$project->db_name}\\n      MYSQL_USER: {$project->db_user}\\n      MYSQL_PASSWORD: {$project->db_password}\\n      MYSQL_ROOT_PASSWORD: root_{$project->db_password}\\n";
+            } elseif ($project->db_type === 'postgresql') {
+                $composeContent .= "  db:\\n    image: postgres:15-alpine\\n    container_name: db_{$project->id}\\n    environment:\\n      POSTGRES_DB: {$project->db_name}\\n      POSTGRES_USER: {$project->db_user}\\n      POSTGRES_PASSWORD: {$project->db_password}\\n";
+            }
+
+            // 4. Return perintah Bash dengan injeksi Base64 decoding
+            return "mkdir -p {$workdir} && cd {$workdir} && rm -rf ./* && git clone {$project->github_url} . && echo '{$envBase64}' | base64 -d > .env && echo -e '{$dockerfileContent}' > Dockerfile && echo -e '{$composeContent}' > docker-compose.yml && docker compose build";
+        }
+        
+        // Action lainnya
         return match($action) {
-            'build' => "mkdir -p {$workdir} && cd {$workdir} && rm -rf ./* && git clone {$project->github_url} . && docker build -t img_project_{$project->id} .",
-            'start' => "docker run -d --name container_{$project->id} -p {$project->docker_port}:80 img_project_{$project->id}",
-            'stop'  => "docker stop container_{$project->id} && docker rm container_{$project->id}",
-            'restart' => "docker restart container_{$project->id}",
-            default => "echo 'Action tidak dikenali'",
+            'start' => "cd {$workdir} && docker compose up -d",
+            'stop'  => "cd {$workdir} && docker compose down",
+            'restart' => "cd {$workdir} && docker compose restart",
         };
     }
 }
