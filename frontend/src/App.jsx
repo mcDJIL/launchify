@@ -1,20 +1,27 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import AdminDashboard from './pages/AdminDashboard';
+import TopUp from './pages/TopUp';
+import CreateProject from './pages/CreateProject';
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50 text-gray-900">
+      <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
         <Routes>
           {/* Public Routes */}
-          <Route path="/login" element={<div className="p-10 text-xl">Halaman Login (WIP)</div>} />
-          <Route path="/register" element={<div className="p-10 text-xl">Halaman Register (WIP)</div>} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-          {/* Protected Routes */}
-          <Route path="/" element={<div className="p-10 text-xl">Dashboard User (WIP)</div>} />
-          <Route path="/topup" element={<div className="p-10 text-xl">Top-Up QRIS (WIP)</div>} />
-          
-          {/* Admin Routes */}
-          <Route path="/admin" element={<div className="p-10 text-xl">Admin Approval (WIP)</div>} />
+          {/* Protected Routes (Nanti kita {amankan dengan middleware komponen) */}
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/topup" element={<TopUp />} />
+          <Route path="/projects/create" element={<CreateProject />} />
+          <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </div>
     </Router>
