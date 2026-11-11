@@ -23,7 +23,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/topup/request', [TopupTransactionController::class, 'requestTopup']);
     Route::post('/topup/{id}/upload-proof', [TopupTransactionController::class, 'uploadProof']);
 
-    Route::post('/topup/{id}/approve', [TopupTransactionController::class, 'approve']);
+    Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+        Route::get('/admin/topups', function () {
+            return \App\Models\TopupTransaction::where('status', 'verifying')->with('user')->get();
+        });
+
+        Route::post('/topup/{id}/approve', [TopupTransactionController::class, 'approve']);
+        Route::post('/topup/{id}/reject', [TopupTransactionController::class, 'reject']);
+    });
 
     Route::post('/projects/{id}/deploy', [DeploymentController::class, 'trigger']);
     Route::get('/projects/{id}/logs', [DeploymentController::class, 'logs']);
