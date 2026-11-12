@@ -206,7 +206,7 @@ class DeploymentController extends Controller
             $nginxBase64 = base64_encode($nginxConfig);
 
             // 5. Perintah Bash menggunakan base64 -d di seluruh file
-            return "mkdir -p {$workdir} && cd {$workdir} && rm -rf ./* && git clone {$project->github_url} . && cd {$appDir} && echo '{$envBase64}' | base64 -d > .env && echo '{$dockerfileBase64}' | base64 -d > Dockerfile && echo '{$composeBase64}' | base64 -d > docker-compose.yml && docker compose -p {$composeProject} build && docker compose -p {$composeProject} up -d && echo '{$nginxBase64}' | base64 -d > {$nginxConfPath} && sudo systemctl reload nginx";
+            return "rm -rf {$workdir} && mkdir -p {$workdir} && cd {$workdir} && git clone {$project->github_url} . && cd {$appDir} && echo '{$envBase64}' | base64 -d > .env && echo '{$dockerfileBase64}' | base64 -d > Dockerfile && echo '{$composeBase64}' | base64 -d > docker-compose.yml && docker compose -p {$composeProject} build && docker compose -p {$composeProject} up -d && echo '{$nginxBase64}' | base64 -d > {$nginxConfPath} && sudo systemctl reload nginx";        
         }
         
         return match($action) {
