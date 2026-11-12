@@ -18,7 +18,7 @@ class DeploymentController extends Controller
 
         try {
             // Mengambil 100 baris log terakhir dari container project ini
-            $command = "docker logs --tail 100 container_{$project->id}";
+            $command = "docker logs --tail 100 app_{$project->id}";
             $process = Process::fromShellCommandline($command);
             $process->run();
 
