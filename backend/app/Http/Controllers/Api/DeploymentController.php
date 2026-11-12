@@ -139,7 +139,7 @@ class DeploymentController extends Controller
         
         // Auto-Assign Host Port jika belum ada
         if (empty($project->host_port)) {
-            $lastPort = \App\Models\Project::max('host_port') ?? 8000;
+            $lastPort = Project::max('host_port') ?? 8000;
             $project->host_port = $lastPort + 1;
             $project->save();
         }
@@ -150,7 +150,8 @@ class DeploymentController extends Controller
         $composeProject = "project_{$project->id}";
 
         if ($action === 'build') {
-            
+        
+            // 1. Setup ENV (Sama seperti sebelumnya)
             $envContent = $project->custom_env ?? "";
             
             if ($project->db_type === 'mysql') {
@@ -161,45 +162,51 @@ class DeploymentController extends Controller
 
             $envBase64 = base64_encode($envContent);
 
+            // 2. Setup Dockerfile (Mengubah \\n menjadi \n untuk Base64)
             $dockerfileContent = match($project->framework) {
-                'laravel' => "FROM php:8.2-fpm\\nRUN apt-get update && apt-get install -y pdo_mysql pdo_pgsql\\nCOPY . .\\nCMD [\"php-fpm\"]",
-                'html' => "FROM nginx:alpine\\nCOPY . /usr/share/nginx/html",
-                'express' => "FROM node:18-alpine\\nWORKDIR /app\\nCOPY package*.json ./\\nRUN npm install\\nCOPY . .\\nEXPOSE {$containerPort}\\nCMD [\"npm\", \"start\"]",
-                'react', 'vue' => "FROM node:18-alpine AS builder\\nWORKDIR /app\\nCOPY package*.json ./\\nRUN npm install\\nCOPY . .\\nRUN npm run build\\nFROM nginx:alpine\\nCOPY --from=builder /app/dist /usr/share/nginx/html\\nEXPOSE 80",
-                'golang' => "FROM golang:1.21-alpine AS builder\\nWORKDIR /app\\nCOPY . .\\nRUN go build -o main .\\nFROM alpine:latest\\nWORKDIR /app\\nCOPY --from=builder /app/main .\\nEXPOSE {$containerPort}\\nCMD [\"./main\"]",
-                default => "FROM nginx:alpine\\nCOPY . /usr/share/nginx/html"
+                'laravel' => "FROM php:8.2-fpm\nRUN apt-get update && apt-get install -y pdo_mysql pdo_pgsql\nCOPY . .\nCMD [\"php-fpm\"]",
+                'html' => "FROM nginx:alpine\nCOPY . /usr/share/nginx/html",
+                'express' => "FROM node:18-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install\nCOPY . .\nEXPOSE {$containerPort}\nCMD [\"npm\", \"start\"]",
+                'react', 'vue' => "FROM node:18-alpine AS builder\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install\nCOPY . .\nRUN npm run build\nFROM nginx:alpine\nCOPY --from=builder /app/dist /usr/share/nginx/html\nEXPOSE 80",
+                'golang' => "FROM golang:1.21-alpine AS builder\nWORKDIR /app\nCOPY . .\nRUN go build -o main .\nFROM alpine:latest\nWORKDIR /app\nCOPY --from=builder /app/main .\nEXPOSE {$containerPort}\nCMD [\"./main\"]",
+                default => "FROM nginx:alpine\nCOPY . /usr/share/nginx/html"
             };
 
-            $composeContent = "version: '3.8'\\nservices:\\n  app:\\n    build: .\\n    container_name: app_{$project->id}\\n    ports:\\n      - '127.0.0.1:{$hostPort}:{$containerPort}'\\n";
+            $dockerfileBase64 = base64_encode($dockerfileContent);
+
+            // 3. Setup Docker Compose (Mengubah \\n menjadi \n untuk Base64)
+            $composeContent = "version: '3.8'\nservices:\n  app:\n    build: .\n    container_name: app_{$project->id}\n    ports:\n      - '127.0.0.1:{$hostPort}:{$containerPort}'\n";
             
             if ($project->db_type === 'mysql') {
-                $composeContent .= "  db:\\n    image: mysql:8.0\\n    container_name: db_{$project->id}\\n    environment:\\n      MYSQL_DATABASE: {$project->db_name}\\n      MYSQL_USER: {$project->db_user}\\n      MYSQL_PASSWORD: {$project->db_password}\\n      MYSQL_ROOT_PASSWORD: root_{$project->db_password}\\n";
+                $composeContent .= "  db:\n    image: mysql:8.0\n    container_name: db_{$project->id}\n    environment:\n      MYSQL_DATABASE: {$project->db_name}\n      MYSQL_USER: {$project->db_user}\n      MYSQL_PASSWORD: {$project->db_password}\n      MYSQL_ROOT_PASSWORD: root_{$project->db_password}\n";
             } elseif ($project->db_type === 'postgresql') {
-                $composeContent .= "  db:\\n    image: postgres:15-alpine\\n    container_name: db_{$project->id}\\n    environment:\\n      POSTGRES_DB: {$project->db_name}\\n      POSTGRES_USER: {$project->db_user}\\n      POSTGRES_PASSWORD: {$project->db_password}\\n";
+                $composeContent .= "  db:\n    image: postgres:15-alpine\n    container_name: db_{$project->id}\n    environment:\n      POSTGRES_DB: {$project->db_name}\n      POSTGRES_USER: {$project->db_user}\n      POSTGRES_PASSWORD: {$project->db_password}\n";
             }
 
+            $composeBase64 = base64_encode($composeContent);
+
+            // 4. Setup Nginx Config
             $nginxConfig = "
-                server {
-                    listen 80;
-                    listen 443 ssl;
-                    server_name {$subdomain};
+            server {
+                listen 80;
+                listen 443 ssl;
+                server_name {$subdomain};
 
-                    ssl_certificate /etc/letsencrypt/live/app.launchify.site/fullchain.pem;
-                    ssl_certificate_key /etc/letsencrypt/live/app.launchify.site/privkey.pem;
+                ssl_certificate /etc/letsencrypt/live/app.launchify.site/fullchain.pem;
+                ssl_certificate_key /etc/letsencrypt/live/app.launchify.site/privkey.pem;
 
-                    location / {
-                        proxy_pass http://127.0.0.1:{$hostPort};
-                        proxy_set_header Host \\\$host;
-                        proxy_set_header X-Real-IP \\\$remote_addr;
-                        proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;
-                        proxy_set_header X-Forwarded-Proto \\\$scheme;
-                    }
-                }";
-                
+                location / {
+                    proxy_pass http://127.0.0.1:{$hostPort};
+                    proxy_set_header Host \\\$host;
+                    proxy_set_header X-Real-IP \\\$remote_addr;
+                    proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto \\\$scheme;
+                }
+            }";
             $nginxBase64 = base64_encode($nginxConfig);
 
-            // 2. PERUBAHAN: Tambahkan 'docker compose -p {$composeProject} up -d' setelah proses build
-            return "mkdir -p {$workdir} && cd {$workdir} && rm -rf ./* && git clone {$project->github_url} . && cd {$appDir} && echo '{$envBase64}' | base64 -d > .env && echo -e '{$dockerfileContent}' > Dockerfile && echo -e '{$composeContent}' > docker-compose.yml && docker compose -p {$composeProject} build && docker compose -p {$composeProject} up -d && echo '{$nginxBase64}' | base64 -d > {$nginxConfPath} && sudo systemctl reload nginx";
+            // 5. Perintah Bash menggunakan base64 -d di seluruh file
+            return "mkdir -p {$workdir} && cd {$workdir} && rm -rf ./* && git clone {$project->github_url} . && cd {$appDir} && echo '{$envBase64}' | base64 -d > .env && echo '{$dockerfileBase64}' | base64 -d > Dockerfile && echo '{$composeBase64}' | base64 -d > docker-compose.yml && docker compose -p {$composeProject} build && docker compose -p {$composeProject} up -d && echo '{$nginxBase64}' | base64 -d > {$nginxConfPath} && sudo systemctl reload nginx";
         }
         
         return match($action) {
