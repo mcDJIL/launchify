@@ -45,6 +45,7 @@ class ProjectController extends Controller
         $hourlyRate = $basePrice + $dbPrice;
 
         $project = $request->user()->projects()->create([
+            'plan_id' => $frameworkPlan->id,
             'name' => $request->name,
             'github_url' => $request->github_url,
             'docker_port' => $request->docker_port,
