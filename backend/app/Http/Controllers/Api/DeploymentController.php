@@ -143,9 +143,23 @@ class DeploymentController extends Controller
             $project->host_port = $lastPort + 1;
             $project->save();
         }
+
+        $defaultPort = match($project->framework) {
+            'laravel', 'html', 'react', 'vue' => 80,
+            'express' => 3000,
+            'golang' => 8080,
+            default => 80
+        };
         
-        $hostPort = $project->host_port;          // Contoh: 8001 (Auto-generated)
-        $containerPort = $project->docker_port;   // Contoh: 80 atau 3000 (Input user)
+        $containerPort = in_array($project->framework, ['laravel', 'html', 'react', 'vue']) 
+                        ? 80 
+                        : ($project->docker_port ?: $defaultPort);
+        if ($project->docker_port != $containerPort) {
+            $project->docker_port = $containerPort;
+            $project->save();
+        }
+
+        $hostPort = $project->host_port;          
         $appDir = $project->root_directory ? "{$workdir}/{$project->root_directory}" : $workdir;
         $composeProject = "project_{$project->id}";
 
