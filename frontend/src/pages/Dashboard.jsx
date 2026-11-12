@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
-import { Wallet, Plus, Server, Play, Square, LogOut, Activity, Terminal } from 'lucide-react';
+import { Wallet, Plus, Server, Play, Square, LogOut, Activity, Terminal, RefreshCw } from 'lucide-react';
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -10,6 +10,7 @@ export default function Dashboard() {
   
   // State untuk popup log docker
   const [logModal, setLogModal] = useState({ isOpen: false, projectName: '', logs: '', loading: false });
+  const [updatingIds, setUpdatingIds] = useState([]);
 
   useEffect(() => {
     fetchData();
@@ -44,6 +45,34 @@ export default function Dashboard() {
       alert(`Berhasil melakukan ${action} pada server!`);
     } catch (err) {
       alert(err.response?.data?.message || 'Gagal mengeksekusi perintah server.');
+    }
+  };
+
+  const pollUpdate = async (projectId) => {
+    try {
+      const res = await api.get(`/projects/${projectId}`);
+      const latest = [...(res.data.deployments || [])].sort((a, b) => b.id - a.id)[0];
+      if (latest?.status === 'processing') {
+        setTimeout(() => pollUpdate(projectId), 5000);
+        return;
+      }
+      setUpdatingIds((ids) => ids.filter((id) => id !== projectId));
+      fetchData();
+      alert(latest?.status === 'success'
+        ? 'Update berhasil.'
+        : `Update gagal:\n${(latest?.log_output || '').slice(-800)}`);
+    } catch (err) {
+      setUpdatingIds((ids) => ids.filter((id) => id !== projectId));
+    }
+  };
+
+  const handleUpdate = async (projectId) => {
+    try {
+      await api.post(`/projects/${projectId}/deploy`, { action: 'update' });
+      setUpdatingIds((ids) => [...ids, projectId]);
+      pollUpdate(projectId);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Gagal memulai update.');
     }
   };
 
@@ -158,6 +187,9 @@ export default function Dashboard() {
                         <Square className="w-4 h-4" /> Stop
                       </button>
                     )}
+                    <button onClick={() => handleUpdate(proj.id)} disabled={updatingIds.includes(proj.id)} className="flex-1 flex justify-center items-center gap-1 bg-blue-50 text-blue-700 py-2 rounded-lg font-semibold hover:bg-blue-100 transition disabled:opacity-60">
+                      <RefreshCw className={`w-4 h-4 ${updatingIds.includes(proj.id) ? 'animate-spin' : ''}`} /> {updatingIds.includes(proj.id) ? 'Updating...' : 'Update'}
+                    </button>
                     <button onClick={() => handleViewLogs(proj)} className="flex-1 flex justify-center items-center gap-1 bg-gray-100 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-200 transition">
                       <Terminal className="w-4 h-4" /> Logs
                     </button>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\Deployment;
+use App\Jobs\RunDeployment;
 use Illuminate\Http\Request;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
@@ -39,16 +40,22 @@ class DeploymentController extends Controller
     public function trigger(Request $request, string $projectId)
     {
         $request->validate([
-            'action' => 'required|in:build,start,stop,restart'
+            'action' => 'required|in:build,start,stop,restart,update'
         ]);
 
         $project = $request->user()->projects()->findOrFail($projectId);
 
         // Validasi Saldo: Cegah user menjalankan aplikasi jika saldo habis/minus
-        if (in_array($request->action, ['build', 'start', 'restart']) && $request->user()->wallet_balance <= 0) {
+        if (in_array($request->action, ['build', 'start', 'restart', 'update']) && $request->user()->wallet_balance <= 0) {
             return response()->json([
                 'message' => 'Saldo tidak mencukupi untuk menjalankan aplikasi. Silakan Top-Up QRIS.'
             ], 403);
+        }
+
+        if ($request->action === 'update' && Deployment::where('project_id', $project->id)->where('status', 'processing')->exists()) {
+            return response()->json([
+                'message' => 'Masih ada proses deployment yang berjalan untuk project ini'
+            ], 409);
         }
 
         // 1. Catat transaksi deployment di awal dengan status 'processing'
@@ -57,6 +64,12 @@ class DeploymentController extends Controller
             'action' => $request->action,
             'status' => 'processing',
         ]);
+
+        if ($request->action === 'update') {
+            RunDeployment::dispatch($deployment->id, $this->getBashCommand('update', $project));
+
+            return response()->json(['message' => 'Update dijadwalkan', 'data' => $deployment], 202);
+        }
 
         try {
             // 2. Dapatkan string perintah bash (script Docker)
@@ -181,6 +194,7 @@ class DeploymentController extends Controller
             'start' => "cd {$appDir} && docker compose -p {$composeProject} up -d && sudo systemctl reload nginx",
             'stop'  => "cd {$appDir} && docker compose -p {$composeProject} down", 
             'restart' => "cd {$appDir} && docker compose -p {$composeProject} restart",
+            'update' => "cd {$workdir} && git pull --ff-only && cd {$appDir} && docker compose -p {$composeProject} build && docker compose -p {$composeProject} up -d",
         };
     }
 }
