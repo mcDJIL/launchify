@@ -19,7 +19,6 @@ class ProjectController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'plan_id' => 'required|exists:plans,id',
             'name' => 'required|string|max:255',
             'github_url' => 'required|url',
             'docker_port' => 'required|integer|min:1024|max:65535',
@@ -75,7 +74,6 @@ class ProjectController extends Controller
         $project = $request->user()->projects()->findOrFail($id);
 
         $validated = $request->validate([
-            'plan_id' => 'sometimes|exists:plans,id',
             'name' => 'sometimes|string|max:255',
             'github_url' => 'sometimes|url',
             'docker_port' => 'sometimes|integer|min:1024|max:65535',
