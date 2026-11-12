@@ -126,6 +126,12 @@ class DeploymentController extends Controller
     private function getBashCommand($action, $project)
     {
         $workdir = "/var/www/paas_projects/project_{$project->id}";
+        
+        // 1. AUTO-DETECT: Jika user klik Start tapi foldernya belum ada, paksa ke mode Build!
+        if ($action === 'start' && !is_dir($workdir)) {
+            $action = 'build';
+        }
+
         $domainKamu = "app.launchify.site"; 
         $cleanName = strtolower(preg_replace('/[^a-zA-Z0-9-]/', '', $project->name));
         $subdomain = "{$cleanName}.{$domainKamu}";
@@ -133,7 +139,7 @@ class DeploymentController extends Controller
         
         // Auto-Assign Host Port jika belum ada
         if (empty($project->host_port)) {
-            $lastPort = Project::max('host_port') ?? 8000;
+            $lastPort = \App\Models\Project::max('host_port') ?? 8000;
             $project->host_port = $lastPort + 1;
             $project->save();
         }
@@ -164,7 +170,6 @@ class DeploymentController extends Controller
                 default => "FROM nginx:alpine\\nCOPY . /usr/share/nginx/html"
             };
 
-            // Perhatikan bagian ports: docker compose sekarang diikat kuat ke 127.0.0.1
             $composeContent = "version: '3.8'\\nservices:\\n  app:\\n    build: .\\n    container_name: app_{$project->id}\\n    ports:\\n      - '127.0.0.1:{$hostPort}:{$containerPort}'\\n";
             
             if ($project->db_type === 'mysql') {
@@ -173,27 +178,28 @@ class DeploymentController extends Controller
                 $composeContent .= "  db:\\n    image: postgres:15-alpine\\n    container_name: db_{$project->id}\\n    environment:\\n      POSTGRES_DB: {$project->db_name}\\n      POSTGRES_USER: {$project->db_user}\\n      POSTGRES_PASSWORD: {$project->db_password}\\n";
             }
 
-            // Nginx proxy meneruskan trafik ke hostPort
             $nginxConfig = "
-    server {
-        listen 80;
-        listen 443 ssl;
-        server_name {$subdomain};
+                server {
+                    listen 80;
+                    listen 443 ssl;
+                    server_name {$subdomain};
 
-        ssl_certificate /etc/letsencrypt/live/app.launchify.site/fullchain.pem;
-        ssl_certificate_key /etc/letsencrypt/live/app.launchify.site/privkey.pem;
+                    ssl_certificate /etc/letsencrypt/live/app.launchify.site/fullchain.pem;
+                    ssl_certificate_key /etc/letsencrypt/live/app.launchify.site/privkey.pem;
 
-        location / {
-            proxy_pass http://127.0.0.1:{$hostPort};
-            proxy_set_header Host \\\$host;
-            proxy_set_header X-Real-IP \\\$remote_addr;
-            proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto \\\$scheme;
-        }
-    }";
+                    location / {
+                        proxy_pass http://127.0.0.1:{$hostPort};
+                        proxy_set_header Host \\\$host;
+                        proxy_set_header X-Real-IP \\\$remote_addr;
+                        proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;
+                        proxy_set_header X-Forwarded-Proto \\\$scheme;
+                    }
+                }";
+                
             $nginxBase64 = base64_encode($nginxConfig);
 
-            return "mkdir -p {$workdir} && cd {$workdir} && rm -rf ./* && git clone {$project->github_url} . && cd {$appDir} && echo '{$envBase64}' | base64 -d > .env && echo -e '{$dockerfileContent}' > Dockerfile && echo -e '{$composeContent}' > docker-compose.yml && docker compose -p {$composeProject} build && echo '{$nginxBase64}' | base64 -d > {$nginxConfPath} && sudo systemctl reload nginx";
+            // 2. PERUBAHAN: Tambahkan 'docker compose -p {$composeProject} up -d' setelah proses build
+            return "mkdir -p {$workdir} && cd {$workdir} && rm -rf ./* && git clone {$project->github_url} . && cd {$appDir} && echo '{$envBase64}' | base64 -d > .env && echo -e '{$dockerfileContent}' > Dockerfile && echo -e '{$composeContent}' > docker-compose.yml && docker compose -p {$composeProject} build && docker compose -p {$composeProject} up -d && echo '{$nginxBase64}' | base64 -d > {$nginxConfPath} && sudo systemctl reload nginx";
         }
         
         return match($action) {
