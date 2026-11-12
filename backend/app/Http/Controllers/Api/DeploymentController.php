@@ -164,7 +164,7 @@ class DeploymentController extends Controller
 
             // 2. Setup Dockerfile (Mengubah \\n menjadi \n untuk Base64)
             $dockerfileContent = match($project->framework) {
-                'laravel' => "FROM php:8.2-fpm\nRUN apt-get update && apt-get install -y pdo_mysql pdo_pgsql\nCOPY . .\nCMD [\"php-fpm\"]",
+                'laravel' => "FROM php:8.2-fpm\nRUN apt-get update && apt-get install -y libpq-dev && docker-php-ext-install pdo pdo_mysql pdo_pgsql\nCOPY . .\nCMD [\"php-fpm\"]",
                 'html' => "FROM nginx:alpine\nCOPY . /usr/share/nginx/html",
                 'express' => "FROM node:18-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install\nCOPY . .\nEXPOSE {$containerPort}\nCMD [\"npm\", \"start\"]",
                 'react', 'vue' => "FROM node:18-alpine AS builder\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install\nCOPY . .\nRUN npm run build\nFROM nginx:alpine\nCOPY --from=builder /app/dist /usr/share/nginx/html\nEXPOSE 80",
