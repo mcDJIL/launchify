@@ -52,6 +52,12 @@ class DeploymentController extends Controller
             ], 403);
         }
 
+        if (in_array($request->action, ['start', 'restart', 'stop', 'update']) && !Deployment::where('project_id', $project->id)->where('action', 'build')->where('status', 'success')->exists()) {
+            return response()->json([
+                'message' => 'Build project ini sampai berhasil terlebih dahulu sebelum menjalankan aksi ini'
+            ], 422);
+        }
+
         if ($request->action === 'update' && Deployment::where('project_id', $project->id)->where('status', 'processing')->exists()) {
             return response()->json([
                 'message' => 'Masih ada proses deployment yang berjalan untuk project ini'

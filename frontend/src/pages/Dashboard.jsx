@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
-import { Wallet, Plus, Server, Play, Square, LogOut, Activity, Terminal, RefreshCw } from 'lucide-react';
+import { Wallet, Plus, Server, Play, Square, LogOut, Activity, Terminal, RefreshCw, Hammer } from 'lucide-react';
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -11,6 +11,7 @@ export default function Dashboard() {
   // State untuk popup log docker
   const [logModal, setLogModal] = useState({ isOpen: false, projectName: '', logs: '', loading: false });
   const [updatingIds, setUpdatingIds] = useState([]);
+  const [buildingIds, setBuildingIds] = useState([]);
 
   useEffect(() => {
     fetchData();
@@ -63,6 +64,19 @@ export default function Dashboard() {
         : `Update gagal:\n${(latest?.log_output || '').slice(-800)}`);
     } catch (err) {
       setUpdatingIds((ids) => ids.filter((id) => id !== projectId));
+    }
+  };
+
+  const handleBuild = async (projectId) => {
+    setBuildingIds((ids) => [...ids, projectId]);
+    try {
+      await api.post(`/projects/${projectId}/deploy`, { action: 'build' });
+      alert('Build berhasil.');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Build gagal.');
+    } finally {
+      setBuildingIds((ids) => ids.filter((id) => id !== projectId));
+      fetchData();
     }
   };
 
@@ -177,7 +191,13 @@ export default function Dashboard() {
                     <p><strong>Biaya:</strong> Rp {proj.hourly_rate}/jam</p>
                   </div>
 
-                  <div className="flex gap-2 border-t pt-4 mt-auto">
+                  <div className="flex flex-col gap-2 border-t pt-4 mt-auto">
+                    {proj.status !== 'active' && (
+                      <button onClick={() => handleBuild(proj.id)} disabled={buildingIds.includes(proj.id)} className="flex justify-center items-center gap-1 bg-amber-50 text-amber-700 py-2 rounded-lg font-semibold hover:bg-amber-100 transition disabled:opacity-60">
+                        <Hammer className="w-4 h-4" /> {buildingIds.includes(proj.id) ? 'Building...' : 'Build'}
+                      </button>
+                    )}
+                    <div className="flex gap-2">
                     {proj.status !== 'active' ? (
                       <button onClick={() => handleDeployAction(proj.id, 'start')} className="flex-1 flex justify-center items-center gap-1 bg-green-50 text-green-700 py-2 rounded-lg font-semibold hover:bg-green-100 transition">
                         <Play className="w-4 h-4" /> Start
@@ -193,6 +213,7 @@ export default function Dashboard() {
                     <button onClick={() => handleViewLogs(proj)} className="flex-1 flex justify-center items-center gap-1 bg-gray-100 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-200 transition">
                       <Terminal className="w-4 h-4" /> Logs
                     </button>
+                    </div>
                   </div>
                 </div>
               );
