@@ -10,7 +10,7 @@ export default function CreateProject() {
   const [plans, setPlans] = useState([]);
   
   const [form, setForm] = useState({
-    name: '', github_url: '', docker_port: '80', 
+    name: '', github_url: '', root_directory: '', docker_port: '80', 
     framework: 'html', db_type: 'none', 
     db_name: '', db_user: '', db_password: '', custom_env: ''
   });
@@ -60,7 +60,7 @@ export default function CreateProject() {
     setLoading(true);
     setError(null);
     try {
-      await api.post('/projects', form);
+      await api.post('/projects', { ...form, root_directory: form.root_directory || null });
       alert('Project berhasil didaftarkan!');
       navigate('/dashboard');
     } catch (err) {
@@ -105,6 +105,11 @@ export default function CreateProject() {
                 <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2"><FolderGit2 className="w-4 h-4" /> URL Repositori GitHub</label>
                 <input type="url" name="github_url" required placeholder="https://github.com/mcDJIL/repo-kamu" className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" value={form.github_url} onChange={handleChange} />
               </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Folder Aplikasi di Repositori (Opsional)</label>
+              <input type="text" name="root_directory" placeholder="misal: frontend atau backend (kosongkan jika di root)" className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" value={form.root_directory} onChange={handleChange} />
             </div>
 
             {/* Pilihan Framework Otomatis dari Database */}

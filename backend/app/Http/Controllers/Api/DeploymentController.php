@@ -121,6 +121,8 @@ class DeploymentController extends Controller
         
         $hostPort = $project->host_port;          // Contoh: 8001 (Auto-generated)
         $containerPort = $project->docker_port;   // Contoh: 80 atau 3000 (Input user)
+        $appDir = $project->root_directory ? "{$workdir}/{$project->root_directory}" : $workdir;
+        $composeProject = "project_{$project->id}";
 
         if ($action === 'build') {
             
@@ -172,13 +174,13 @@ class DeploymentController extends Controller
     }";
             $nginxBase64 = base64_encode($nginxConfig);
 
-            return "mkdir -p {$workdir} && cd {$workdir} && rm -rf ./* && git clone {$project->github_url} . && echo '{$envBase64}' | base64 -d > .env && echo -e '{$dockerfileContent}' > Dockerfile && echo -e '{$composeContent}' > docker-compose.yml && docker compose build && echo '{$nginxBase64}' | base64 -d > {$nginxConfPath} && sudo systemctl reload nginx";
+            return "mkdir -p {$workdir} && cd {$workdir} && rm -rf ./* && git clone {$project->github_url} . && cd {$appDir} && echo '{$envBase64}' | base64 -d > .env && echo -e '{$dockerfileContent}' > Dockerfile && echo -e '{$composeContent}' > docker-compose.yml && docker compose -p {$composeProject} build && echo '{$nginxBase64}' | base64 -d > {$nginxConfPath} && sudo systemctl reload nginx";
         }
         
         return match($action) {
-            'start' => "cd {$workdir} && docker compose up -d && sudo systemctl reload nginx",
-            'stop'  => "cd {$workdir} && docker compose down", 
-            'restart' => "cd {$workdir} && docker compose restart",
+            'start' => "cd {$appDir} && docker compose -p {$composeProject} up -d && sudo systemctl reload nginx",
+            'stop'  => "cd {$appDir} && docker compose -p {$composeProject} down", 
+            'restart' => "cd {$appDir} && docker compose -p {$composeProject} restart",
         };
     }
 }

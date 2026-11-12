@@ -27,6 +27,7 @@ class ProjectController extends Controller
             'db_user' => 'required|string|max:255',
             'db_password' => 'required|string|max:255',
             'framework' => 'required|string|exists:plans,code',
+            'root_directory' => ['nullable', 'string', 'max:255', 'regex:/^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)*$/', 'not_regex:/(^|\/)\.\.(\/|$)/'],
             'custom_env' => 'nullable|string',
             'host_port' => 'nullable|integer|min:1024|max:65535',
             'status' => 'nullable|in:active,suspended,stopped'
@@ -48,6 +49,7 @@ class ProjectController extends Controller
             'plan_id' => $frameworkPlan->id,
             'name' => $request->name,
             'github_url' => $request->github_url,
+            'root_directory' => $request->root_directory,
             'docker_port' => $request->docker_port,
             'framework' => $request->framework,
             'db_type' => $request->db_type,
