@@ -144,6 +144,12 @@ class DeploymentController extends Controller
             $project->save();
         }
 
+        if (in_array($project->db_type, ['mysql', 'postgresql']) && empty($project->db_port)) {
+            $lastDbPort = Project::max('db_port') ?? 9000;
+            $project->db_port = $lastDbPort + 1;
+            $project->save();
+        }
+
         $defaultPort = match($project->framework) {
             'laravel', 'html', 'react', 'vue' => 80,
             'express' => 3000,
@@ -159,9 +165,17 @@ class DeploymentController extends Controller
             $project->save();
         }
 
-        $hostPort = $project->host_port;          
+        $hostPort = $project->host_port;      
+        $dbPort = $project->db_port;    
         $appDir = $project->root_directory ? "{$workdir}/{$project->root_directory}" : $workdir;
         $composeProject = "project_{$project->id}";
+
+        $releaseCmd = "";
+        if (!empty($project->release_command)) {
+            $safeRelease = escapeshellarg($project->release_command);
+            // Beri jeda 5 detik agar container DB siap menerima koneksi saat pertama kali start
+            $releaseCmd = " && sleep 5 && docker exec app_{$project->id} sh -c {$safeRelease}";
+        }
 
         if ($action === 'build') {
         
@@ -188,12 +202,12 @@ class DeploymentController extends Controller
             $dockerfileBase64 = base64_encode($dockerfileContent);
 
             // 3. Setup Docker Compose (Mengubah \\n menjadi \n untuk Base64)
-            $composeContent = "version: '3.8'\nservices:\n  app:\n    build: .\n    container_name: app_{$project->id}\n    ports:\n      - '127.0.0.1:{$hostPort}:{$containerPort}'\n";
-            
+            $composeContent = "services:\n  app:\n    build: .\n    container_name: app_{$project->id}\n    restart: unless-stopped\n    ports:\n      - '127.0.0.1:{$hostPort}:{$containerPort}'\n";            
+
             if ($project->db_type === 'mysql') {
-                $composeContent .= "  db:\n    image: mysql:8.0\n    container_name: db_{$project->id}\n    environment:\n      MYSQL_DATABASE: {$project->db_name}\n      MYSQL_USER: {$project->db_user}\n      MYSQL_PASSWORD: {$project->db_password}\n      MYSQL_ROOT_PASSWORD: root_{$project->db_password}\n";
+                $composeContent .= "  db:\n    image: mysql:8.0\n    container_name: db_{$project->id}\n    restart: unless-stopped\n    ports:\n      - '0.0.0.0:{$dbPort}:3306'\n    environment:\n      MYSQL_DATABASE: {$project->db_name}\n      MYSQL_USER: {$project->db_user}\n      MYSQL_PASSWORD: {$project->db_password}\n      MYSQL_ROOT_PASSWORD: root_{$project->db_password}\n    volumes:\n      - db_data_{$project->id}:/var/lib/mysql\nvolumes:\n  db_data_{$project->id}:\n";
             } elseif ($project->db_type === 'postgresql') {
-                $composeContent .= "  db:\n    image: postgres:15-alpine\n    container_name: db_{$project->id}\n    environment:\n      POSTGRES_DB: {$project->db_name}\n      POSTGRES_USER: {$project->db_user}\n      POSTGRES_PASSWORD: {$project->db_password}\n";
+                $composeContent .= "  db:\n    image: postgres:15-alpine\n    container_name: db_{$project->id}\n    restart: unless-stopped\n    ports:\n      - '0.0.0.0:{$dbPort}:5432'\n    environment:\n      POSTGRES_DB: {$project->db_name}\n      POSTGRES_USER: {$project->db_user}\n      POSTGRES_PASSWORD: {$project->db_password}\n    volumes:\n      - db_data_{$project->id}:/var/lib/postgresql/data\nvolumes:\n  db_data_{$project->id}:\n";
             }
 
             $composeBase64 = base64_encode($composeContent);
@@ -216,6 +230,7 @@ class DeploymentController extends Controller
                     proxy_set_header X-Forwarded-Proto \$scheme;
                 }
             }";
+            
             $nginxBase64 = base64_encode($nginxConfig);
 
             // 5. Perintah Bash menggunakan base64 -d di seluruh file

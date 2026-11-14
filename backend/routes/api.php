@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DeploymentController;
 use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\ProjectController;
+use App\Http\Controllers\Api\ProjectOperationController;
 use App\Http\Controllers\Api\TopupTransactionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -34,4 +35,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/projects/{id}/deploy', [DeploymentController::class, 'trigger']);
     Route::get('/projects/{id}/logs', [DeploymentController::class, 'logs']);
+
+    Route::post('/projects/{project}/exec', [ProjectOperationController::class, 'execCommand']);
+    Route::get('/projects/{project}/crons', [ProjectOperationController::class, 'indexCrons']);
+    Route::post('/projects/{project}/crons', [ProjectOperationController::class, 'storeCron']);
+    Route::patch('/projects/{project}/crons/{cron}/toggle', [ProjectOperationController::class, 'toggleCron']);
+    Route::delete('/projects/{project}/crons/{cron}', [ProjectOperationController::class, 'destroyCron']);
 });

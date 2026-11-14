@@ -9,7 +9,7 @@ class Project extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'plan_id', 'name', 'github_url', 'root_directory', 'docker_port', 'status', 'db_type', 'db_name', 'db_user', 'db_password', 'framework', 'custom_env', 'host_port', 'hourly_rate'];
+    protected $fillable = ['user_id', 'plan_id', 'name', 'github_url', 'root_directory', 'docker_port', 'status', 'db_type', 'db_name', 'db_user', 'db_password', 'framework', 'custom_env', 'host_port', 'hourly_rate', 'db_port', 'release_command'];
 
     public function user()
     {
@@ -24,5 +24,10 @@ class Project extends Model
     public function deployments()
     {
         return $this->hasMany(Deployment::class);
+    }
+
+    public function crons()
+    {
+        return $this->hasMany(ProjectCron::class);
     }
 }
