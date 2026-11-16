@@ -48,7 +48,7 @@ class DeploymentController extends Controller
         // Validasi Saldo: Cegah user menjalankan aplikasi jika saldo habis/minus
         if (in_array($request->action, ['build', 'start', 'restart', 'update'])) {
             $rate = (float) ($project->hourly_rate ?? 41.6667);
-            if ((float) $request->user()->balance < $rate) {
+            if ((float) $request->user()->wallet_balance < $rate) {
                 return response()->json([
                     'message' => 'Saldo tidak mencukupi untuk menyalakan aplikasi (tarif Rp 1.000/hari atau ~Rp 42/jam).',
                 ], 402);

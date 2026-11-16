@@ -31,8 +31,8 @@ class ProcessHourlyBilling extends Command
                     continue;
                 }
 
-                if ((float) $user->balance >= $cost) {
-                    $user->decrement('balance', $cost);
+                if ((float) $user->wallet_balance >= $cost) {
+                    $user->decrement('wallet_balance', $cost);
 
                     if (class_exists(Transaction::class)) {
                         Transaction::create([
