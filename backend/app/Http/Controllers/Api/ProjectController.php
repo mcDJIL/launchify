@@ -34,16 +34,13 @@ class ProjectController extends Controller
         ]);
 
         $frameworkPlan = Plan::where('type', 'framework')->where('code', $request->framework)->first();
-        $dbPlan = Plan::where('type', 'database')->where('code', $request->db_type)->first();
+        $dbPlan = Plan::where('type', 'database')->where('code', $request->db_type ?? 'none')->first();
 
         if (!$frameworkPlan || !$dbPlan) {
             return response()->json(['message' => 'Framework atau database tidak valid'], 422);
         }
 
-        $basePrice = $frameworkPlan ? $frameworkPlan->price_per_hour : 100;
-        $dbPrice = $dbPlan ? $dbPlan->price_per_hour : 0;
-        
-        $hourlyRate = $basePrice + $dbPrice;
+        $totalHourlyRate = $frameworkPlan->price + ($dbPlan ? $dbPlan->price : 0);
 
         $project = $request->user()->projects()->create([
             'plan_id' => $frameworkPlan->id,
@@ -58,7 +55,7 @@ class ProjectController extends Controller
             'db_password' => $request->db_password,
             'custom_env' => $request->custom_env,
             'host_port' => $request->host_port,
-            'hourly_rate' => $hourlyRate, // Simpan hasil kalkulasi di sini
+            'hourly_rate' => $totalHourlyRate, // Simpan hasil kalkulasi di sini
             'status' => 'stopped'
         ]);
 

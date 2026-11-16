@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Plan;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class PlanSeeder extends Seeder
 {
@@ -24,8 +25,18 @@ class PlanSeeder extends Seeder
 
             ['code' => 'none', 'name' => 'Tanpa Database', 'type' => 'database', 'price_per_hour' => 0],
             ['code' => 'mysql', 'name' => 'MySQL 8', 'type' => 'database', 'price_per_hour' => 150],
-            ['code' => 'postgresql', 'name' => 'PostgreSQL 15', 'type' => 'database', 'price_per_hour' => 200], 
+            ['code' => 'postgresql', 'name' => 'PostgreSQL 15', 'type' => 'database', 'price_per_hour' => 200],
         ];
+        
+        // 1. Semua Framework = Rp 1.000 / jam
+        DB::table('plans')
+            ->where('type', 'framework') // sesuaikan nama kolom kategori di tabel plans kamu
+            ->update(['price' => 1000]); // sesuaikan nama kolom harga (price / hourly_rate)
+
+        // 2. Semua Database (none, mysql, postgresql) = Rp 0 (Gratis / Included)
+        DB::table('plans')
+            ->where('type', 'database')
+            ->update(['price' => 0]);
 
         foreach ($services as $service) {
             Plan::create($service);
