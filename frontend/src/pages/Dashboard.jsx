@@ -166,7 +166,7 @@ export default function Dashboard() {
               return (
                 <div key={proj.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition flex flex-col">
                   <div className="flex justify-between items-start mb-4">
-                    <h4 className="text-lg font-bold text-gray-900">{proj.name}</h4>
+                    <Link to={`/projects/${proj.id}`} className="text-lg font-bold text-gray-900 hover:text-blue-700 hover:underline">{proj.name}</Link>
                     <span className={`text-xs px-2 py-1 rounded font-semibold uppercase ${
                       proj.status === 'active' ? 'bg-green-100 text-green-700' :
                       proj.status === 'suspended' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'

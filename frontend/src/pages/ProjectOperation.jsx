@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 
 export default function ProjectOperations({ project }) {
   // State Console
@@ -21,7 +21,7 @@ export default function ProjectOperations({ project }) {
 
   const fetchCrons = async () => {
     try {
-      const res = await axios.get(`/api/projects/${project.id}/crons`);
+      const res = await api.get(`/projects/${project.id}/crons`);
       setCrons(res.data);
     } catch (err) {
       console.error('Gagal memuat cron jobs:', err);
@@ -35,7 +35,7 @@ export default function ProjectOperations({ project }) {
     setIsRunning(true);
     setConsoleOutput(`$ ${cmdToRun}\nMenjalankan perintah...`);
     try {
-      const res = await axios.post(`/api/projects/${project.id}/exec`, {
+      const res = await api.post(`/projects/${project.id}/exec`, {
         command: cmdToRun,
       });
       setConsoleOutput(`$ ${cmdToRun}\n\n${res.data.output || 'Selesai tanpa output.'}`);
@@ -49,7 +49,7 @@ export default function ProjectOperations({ project }) {
   const handleAddCron = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`/api/projects/${project.id}/crons`, {
+      await api.post(`/projects/${project.id}/crons`, {
         name: cronName,
         schedule: cronSchedule,
         command: cronCommand,
@@ -64,7 +64,7 @@ export default function ProjectOperations({ project }) {
 
   const handleToggleCron = async (cronId) => {
     try {
-      await axios.patch(`/api/projects/${project.id}/crons/${cronId}/toggle`);
+      await api.patch(`/projects/${project.id}/crons/${cronId}/toggle`);
       fetchCrons();
     } catch (err) {
       console.error('Gagal mengubah status cron:', err);
@@ -73,7 +73,7 @@ export default function ProjectOperations({ project }) {
 
   const handleDeleteCron = async (cronId) => {
     try {
-      await axios.delete(`/api/projects/${project.id}/crons/${cronId}`);
+      await api.delete(`/projects/${project.id}/crons/${cronId}`);
       fetchCrons();
     } catch (err) {
       console.error('Gagal menghapus cron:', err);
