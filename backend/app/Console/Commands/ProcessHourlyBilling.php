@@ -17,7 +17,7 @@ class ProcessHourlyBilling extends Command
 
     public function handle()
     {
-        $activeProjects = Project::where('status', 'running')->get();
+        $activeProjects = Project::where('status', 'active')->get();
 
         foreach ($activeProjects as $project) {
             $cost = (float) ($project->hourly_rate ?? 41.6667);
