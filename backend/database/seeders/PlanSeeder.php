@@ -14,32 +14,22 @@ class PlanSeeder extends Seeder
      */
     public function run(): void
     {
-        $services = [
-            ['code' => 'html', 'name' => 'HTML/Statis', 'type' => 'framework', 'price_per_hour' => 50],
-            ['code' => 'php', 'name' => 'PHP Native', 'type' => 'framework', 'price_per_hour' => 100],
-            ['code' => 'react', 'name' => 'React JS', 'type' => 'framework', 'price_per_hour' => 100],
-            ['code' => 'vue', 'name' => 'Vue JS', 'type' => 'framework', 'price_per_hour' => 100],
-            ['code' => 'express', 'name' => 'Node.js (Express)', 'type' => 'framework', 'price_per_hour' => 120],
-            ['code' => 'laravel', 'name' => 'Laravel', 'type' => 'framework', 'price_per_hour' => 150],
-            ['code' => 'golang', 'name' => 'Golang', 'type' => 'framework', 'price_per_hour' => 150],
+        $dailyPrice = 1000;
+        $hourlyPrice = round($dailyPrice / 24, 4); // 41.6667 (jika dikali 24 jam = Rp 1.000,00)
 
-            ['code' => 'none', 'name' => 'Tanpa Database', 'type' => 'database', 'price_per_hour' => 0],
-            ['code' => 'mysql', 'name' => 'MySQL 8', 'type' => 'database', 'price_per_hour' => 150],
-            ['code' => 'postgresql', 'name' => 'PostgreSQL 15', 'type' => 'database', 'price_per_hour' => 200],
+        $plans = [
+            // Framework: Rp 1.000/hari (~Rp 41,67/jam)
+            ['name' => 'Laravel', 'code' => 'laravel', 'type' => 'framework', 'price_per_hour' => $hourlyPrice],
+            ['name' => 'Node.js / Express', 'code' => 'express', 'type' => 'framework', 'price_per_hour' => $hourlyPrice],
+            ['name' => 'React (Vite)', 'code' => 'react', 'type' => 'framework', 'price_per_hour' => $hourlyPrice],
+            ['name' => 'Vue.js', 'code' => 'vue', 'type' => 'framework', 'price_per_hour' => $hourlyPrice],
+            ['name' => 'HTML / Static', 'code' => 'html', 'type' => 'framework', 'price_per_hour' => $hourlyPrice],
+            ['name' => 'Golang', 'code' => 'golang', 'type' => 'framework', 'price_per_hour' => $hourlyPrice],
+
+            // Database: Rp 0 (Gratis / Included)
+            ['name' => 'Tanpa Database', 'code' => 'none', 'type' => 'database', 'price_per_hour' => 0],
+            ['name' => 'MySQL 8.0', 'code' => 'mysql', 'type' => 'database', 'price_per_hour' => 0],
+            ['name' => 'PostgreSQL 15', 'code' => 'postgresql', 'type' => 'database', 'price_per_hour' => 0],
         ];
-        
-        // 1. Semua Framework = Rp 1.000 / jam
-        DB::table('plans')
-            ->where('type', 'framework') // sesuaikan nama kolom kategori di tabel plans kamu
-            ->update(['price' => 1000]); // sesuaikan nama kolom harga (price / hourly_rate)
-
-        // 2. Semua Database (none, mysql, postgresql) = Rp 0 (Gratis / Included)
-        DB::table('plans')
-            ->where('type', 'database')
-            ->update(['price' => 0]);
-
-        foreach ($services as $service) {
-            Plan::create($service);
-        }
     }
 }

@@ -46,10 +46,13 @@ class DeploymentController extends Controller
         $project = $request->user()->projects()->findOrFail($projectId);
 
         // Validasi Saldo: Cegah user menjalankan aplikasi jika saldo habis/minus
-        if (in_array($request->action, ['build', 'start', 'restart', 'update']) && $request->user()->wallet_balance <= 1000) {
-            return response()->json([
-                'message' => 'Saldo tidak mencukupi untuk menjalankan aplikasi. Silakan Top-Up QRIS.'
-            ], 403);
+        if (in_array($request->action, ['build', 'start', 'restart', 'update'])) {
+            $rate = (float) ($project->hourly_rate ?? 41.6667);
+            if ((float) $request->user()->balance < $rate) {
+                return response()->json([
+                    'message' => 'Saldo tidak mencukupi untuk menyalakan aplikasi (tarif Rp 1.000/hari atau ~Rp 42/jam).',
+                ], 402);
+            }
         }
 
         if (in_array($request->action, ['start', 'restart', 'stop', 'update']) && !Deployment::where('project_id', $project->id)->where('action', 'build')->where('status', 'success')->exists()) {

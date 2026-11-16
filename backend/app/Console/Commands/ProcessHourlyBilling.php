@@ -13,15 +13,14 @@ use Illuminate\Support\Facades\Process;
 class ProcessHourlyBilling extends Command
 {
     protected $signature = 'billing:process-hourly';
-    protected $description = 'Potong saldo user sebesar Rp 1.000/jam untuk setiap project aktif';
+    protected $description = 'Potong saldo user per jam berdasarkan tarif Rp 1.000/hari (Rp 41,6667/jam)';
 
     public function handle()
     {
         $activeProjects = Project::where('status', 'running')->get();
 
         foreach ($activeProjects as $project) {
-            // Mengambil tarif dari project (1000)
-            $cost = $project->hourly_rate ?? 1000;
+            $cost = (float) ($project->hourly_rate ?? 41.6667);
 
             DB::beginTransaction();
             try {
@@ -32,7 +31,7 @@ class ProcessHourlyBilling extends Command
                     continue;
                 }
 
-                if ($user->balance >= $cost) {
+                if ((float) $user->balance >= $cost) {
                     $user->decrement('balance', $cost);
 
                     if (class_exists(Transaction::class)) {
@@ -41,7 +40,7 @@ class ProcessHourlyBilling extends Command
                             'project_id' => $project->id,
                             'type' => 'usage',
                             'amount' => -$cost,
-                            'description' => "Tagihan per jam: {$project->name} (Rp " . number_format($cost, 0, ',', '.') . ")",
+                            'description' => "Biaya server 1 jam: {$project->name} (Rp 1.000/hari)",
                         ]);
                     }
 
@@ -50,7 +49,6 @@ class ProcessHourlyBilling extends Command
                 } else {
                     DB::commit();
 
-                    // Hentikan container otomatis karena saldo kurang dari Rp 1.000
                     $workdir = "/var/www/paas_projects/project_{$project->id}";
                     $appDir = $project->root_directory ? "{$workdir}/{$project->root_directory}" : $workdir;
                     $composeProject = "project_{$project->id}";

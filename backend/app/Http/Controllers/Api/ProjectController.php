@@ -34,19 +34,25 @@ class ProjectController extends Controller
         ]);
 
         $frameworkPlan = Plan::where('type', 'framework')->where('code', $request->framework)->first();
-        $dbPlan = Plan::where('type', 'database')->where('code', $request->db_type ?? 'none')->first();
+        $dbType = $validated['db_type'] ?? 'none';
+        $dbPlan = Plan::where('type', 'database')
+            ->where('code', $dbType)
+            ->first();
 
         if (!$frameworkPlan || !$dbPlan) {
             return response()->json(['message' => 'Framework atau database tidak valid'], 422);
         }
 
-        $totalHourlyRate = $frameworkPlan->price + ($dbPlan ? $dbPlan->price : 0);
+        $totalHourlyRate = ($frameworkPlan ? (float) $frameworkPlan->price_per_hour : 41.6667)
+                     + ($dbPlan ? (float) $dbPlan->price_per_hour : 0);
 
         $project = $request->user()->projects()->create([
+            'user_id' => $request->user()->id,
             'plan_id' => $frameworkPlan->id,
             'name' => $request->name,
             'github_url' => $request->github_url,
             'root_directory' => $request->root_directory,
+            'release_command' => $request->release_command,
             'docker_port' => $request->docker_port,
             'framework' => $request->framework,
             'db_type' => $request->db_type,

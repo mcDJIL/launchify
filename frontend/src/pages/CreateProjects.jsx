@@ -40,21 +40,20 @@ export default function CreateProject() {
   const frameworkPlans = plans.filter((p) => p.type === 'framework');
   const dbPlans = plans.filter((p) => p.type === 'database');
 
-  // Helper untuk menghitung total rate secara live
+  // Helper untuk menghitung total rate per jam secara live
   const getPrice = (type, code) => {
     const plan = plans.find((p) => p.type === type && p.code === code);
     return plan ? parseFloat(plan.price_per_hour) : 0;
   };
 
   const currentHourlyRate = getPrice('framework', form.framework) + getPrice('database', form.db_type);
+  const currentDailyRate = Math.round(currentHourlyRate * 24); // Hasilnya selalu 1000
 
-  // Cek apakah framework menggunakan port 80 baku
   const isStandardWebPort = ['laravel', 'html', 'react', 'vue'].includes(form.framework);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Otomatis sesuaikan default docker_port saat framework diganti
     if (name === 'framework') {
       const autoPort = ['laravel', 'html', 'react', 'vue'].includes(value)
         ? '80'
@@ -140,7 +139,6 @@ export default function CreateProject() {
                 />
               </div>
 
-              {/* Input Docker Port hanya muncul untuk framework backend custom (Express / Golang) */}
               {!isStandardWebPort && (
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Internal Docker Port</label>
@@ -215,7 +213,7 @@ export default function CreateProject() {
                 {frameworkPlans.length === 0 ? <option value="html">Loading data...</option> : null}
                 {frameworkPlans.map((plan) => (
                   <option key={plan.id} value={plan.code}>
-                    {plan.name} (Rp {Number(plan.price_per_hour).toLocaleString('id-ID')}/jam)
+                    {plan.name} (Rp {Math.round(Number(plan.price_per_hour) * 24).toLocaleString('id-ID')}/hari)
                   </option>
                 ))}
               </select>
@@ -239,7 +237,7 @@ export default function CreateProject() {
                     <span className="text-xs text-emerald-600 font-semibold">
                       {Number(plan.price_per_hour) === 0
                         ? '(Gratis)'
-                        : `(+Rp ${Number(plan.price_per_hour).toLocaleString('id-ID')})`}
+                        : `(+Rp ${Math.round(Number(plan.price_per_hour) * 24).toLocaleString('id-ID')}/hari)`}
                     </span>
                   </label>
                 ))}
@@ -286,12 +284,15 @@ export default function CreateProject() {
                 <Calculator className="w-6 h-6" /> Estimasi Biaya
               </h2>
               <p className="text-blue-100 text-sm">
-                Sudah termasuk container aplikasi & database (flat Rp 1.000/jam).
+                Sudah termasuk container aplikasi & database.
               </p>
             </div>
             <div className="text-right">
-              <span className="text-4xl font-extrabold">Rp {currentHourlyRate.toLocaleString('id-ID')}</span>
-              <span className="text-blue-200">/jam</span>
+              <span className="text-4xl font-extrabold">Rp {currentDailyRate.toLocaleString('id-ID')}</span>
+              <span className="text-blue-200">/hari</span>
+              <p className="text-xs text-blue-200 mt-1">
+                (Dipotong Rp {currentHourlyRate.toFixed(2)} / jam saat aktif)
+              </p>
             </div>
           </div>
 
