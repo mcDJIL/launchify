@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Server, ArrowLeft, Calculator, FolderGit2, Terminal } from 'lucide-react';
+import { ArrowLeft, FolderGit2, Terminal } from 'lucide-react';
 import api from '../utils/api';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function CreateProject() {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ export default function CreateProject() {
   };
 
   const currentHourlyRate = getPrice('framework', form.framework) + getPrice('database', form.db_type);
-  const currentDailyRate = Math.round(currentHourlyRate * 24); // Hasilnya selalu 1000
+  const currentDailyRate = Math.round(currentHourlyRate * 24);
 
   const isStandardWebPort = ['laravel', 'html', 'react', 'vue'].includes(form.framework);
 
@@ -106,207 +107,217 @@ export default function CreateProject() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-800 p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Link to="/dashboard" className="p-2 bg-white rounded-full shadow-sm hover:bg-gray-100 transition">
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </Link>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Server className="w-6 h-6 text-blue-700" /> Buat Project Baru
-          </h1>
+    <div className="min-h-screen bg-paper font-sans text-ink">
+      <header className="sticky top-0 z-40 border-b-2 border-ink bg-paper">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4 md:px-10">
+          <div className="flex min-w-0 items-center gap-4">
+            <Link to="/dashboard" aria-label="Kembali ke dashboard" className="icon-btn">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            <h1 className="font-display truncate text-xl font-extrabold">Project baru</h1>
+          </div>
+          <ThemeToggle />
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-6xl px-6 py-10 md:px-10">
+        <div className="mb-10 max-w-2xl">
+          <h2 className="font-display text-4xl font-extrabold tracking-tight md:text-5xl">Daftarkan repositori-mu.</h2>
+          <p className="mt-3 text-lg text-muted">Isi detail aplikasi, pilih stack, lalu deploy dari dashboard.</p>
         </div>
 
-        {error && <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-lg border border-red-100">{error}</div>}
+        {error && (
+          <div role="alert" className="mb-8 rounded-xl border-2 border-danger p-4 text-sm font-semibold text-danger">
+            {error}
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Section 1: Detail Aplikasi */}
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-            <h2 className="text-lg font-bold text-gray-900 mb-6 border-b pb-2">Detail Aplikasi</h2>
+        <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-[1fr_22rem] lg:items-start">
+          <div className="space-y-8">
+            <section aria-labelledby="section-detail" className="card space-y-6 p-6 md:p-8">
+              <h2 id="section-detail" className="font-display border-b-2 border-ink pb-3 text-2xl font-bold">Detail aplikasi</h2>
 
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-              <div className={isStandardWebPort ? 'md:col-span-2' : ''}>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Nama Project (Tanpa Spasi)</label>
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  placeholder="misal: api-tugas-akhir"
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={form.name}
-                  onChange={handleChange}
-                />
-              </div>
-
-              {!isStandardWebPort && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Internal Docker Port</label>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className={isStandardWebPort ? 'md:col-span-2' : ''}>
+                  <label htmlFor="project-name" className="mb-2 block text-sm font-semibold">Nama project (tanpa spasi)</label>
                   <input
-                    type="number"
-                    name="docker_port"
+                    id="project-name"
+                    type="text"
+                    name="name"
                     required
-                    placeholder="misal: 3000"
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={form.docker_port}
+                    placeholder="misal: api-tugas-akhir"
+                    className="field"
+                    value={form.name}
                     onChange={handleChange}
                   />
                 </div>
-              )}
 
-              <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                  <FolderGit2 className="w-4 h-4" /> URL Repositori GitHub
-                </label>
-                <input
-                  type="url"
-                  name="github_url"
-                  required
-                  placeholder="https://github.com/mcDJIL/repo-kamu"
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={form.github_url}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Folder Aplikasi di Repositori (Opsional)
-                </label>
-                <input
-                  type="text"
-                  name="root_directory"
-                  placeholder="misal: frontend atau backend (kosongkan jika di root)"
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={form.root_directory}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                  <Terminal className="w-4 h-4" /> Post-Deploy / Release Command (Opsional)
-                </label>
-                <input
-                  type="text"
-                  name="release_command"
-                  placeholder="misal: php artisan migrate --force"
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-mono text-sm"
-                  value={form.release_command}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            {/* Pilihan Framework Otomatis dari Database */}
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Pilih Framework / Bahasa</label>
-              <select
-                name="framework"
-                required
-                className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white"
-                value={form.framework}
-                onChange={handleChange}
-              >
-                {frameworkPlans.length === 0 ? <option value="html">Loading data...</option> : null}
-                {frameworkPlans.map((plan) => (
-                  <option key={plan.id} value={plan.code}>
-                    {plan.name} (Rp {Math.round(Number(plan.price_per_hour) * 24).toLocaleString('id-ID')}/hari)
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Pilihan Database Otomatis dari Database */}
-            <div className="md:col-span-2 bg-gray-50 p-6 rounded-xl border border-gray-200 mt-4">
-              <label className="block text-sm font-semibold text-gray-700 mb-4">Integrasi Database (Opsional)</label>
-              <div className="flex flex-wrap gap-6 mb-4">
-                {dbPlans.length === 0 ? <span className="text-gray-500">Loading data...</span> : null}
-                {dbPlans.map((plan) => (
-                  <label key={plan.id} className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700">
+                {!isStandardWebPort && (
+                  <div>
+                    <label htmlFor="project-port" className="mb-2 block text-sm font-semibold">Internal Docker port</label>
                     <input
-                      type="radio"
-                      name="db_type"
-                      value={plan.code}
-                      checked={form.db_type === plan.code}
-                      onChange={handleDbChange}
+                      id="project-port"
+                      type="number"
+                      name="docker_port"
+                      required
+                      placeholder="misal: 3000"
+                      className="field"
+                      value={form.docker_port}
+                      onChange={handleChange}
                     />
-                    {plan.name}{' '}
-                    <span className="text-xs text-emerald-600 font-semibold">
-                      {Number(plan.price_per_hour) === 0
-                        ? '(Gratis)'
-                        : `(+Rp ${Math.round(Number(plan.price_per_hour) * 24).toLocaleString('id-ID')}/hari)`}
-                    </span>
+                  </div>
+                )}
+
+                <div className="md:col-span-2">
+                  <label htmlFor="project-github" className="mb-2 flex items-center gap-2 text-sm font-semibold">
+                    <FolderGit2 className="h-4 w-4" /> URL repositori GitHub
                   </label>
-                ))}
+                  <input
+                    id="project-github"
+                    type="url"
+                    name="github_url"
+                    required
+                    placeholder="https://github.com/mcDJIL/repo-kamu"
+                    className="field"
+                    value={form.github_url}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <div>
+                  <label htmlFor="project-root" className="mb-2 block text-sm font-semibold">Folder aplikasi di repositori (opsional)</label>
+                  <input
+                    id="project-root"
+                    type="text"
+                    name="root_directory"
+                    placeholder="misal: frontend atau backend (kosongkan jika di root)"
+                    className="field"
+                    value={form.root_directory}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="project-release" className="mb-2 flex items-center gap-2 text-sm font-semibold">
+                    <Terminal className="h-4 w-4" /> Release command (opsional)
+                  </label>
+                  <input
+                    id="project-release"
+                    type="text"
+                    name="release_command"
+                    placeholder="misal: php artisan migrate --force"
+                    className="field font-mono text-sm"
+                    value={form.release_command}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="project-framework" className="mb-2 block text-sm font-semibold">Framework / bahasa</label>
+                <select
+                  id="project-framework"
+                  name="framework"
+                  required
+                  className="field"
+                  value={form.framework}
+                  onChange={handleChange}
+                >
+                  {frameworkPlans.length === 0 ? <option value="html">Memuat data...</option> : null}
+                  {frameworkPlans.map((plan) => (
+                    <option key={plan.id} value={plan.code}>
+                      {plan.name} (Rp {Math.round(Number(plan.price_per_hour) * 24).toLocaleString('id-ID')}/hari)
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </section>
+
+            <section aria-labelledby="section-database" className="card space-y-6 p-6 md:p-8">
+              <h2 id="section-database" className="font-display border-b-2 border-ink pb-3 text-2xl font-bold">Database</h2>
+
+              <fieldset>
+                <legend className="mb-4 text-sm font-semibold">Integrasi database (opsional)</legend>
+                <div className="flex flex-wrap gap-3">
+                  {dbPlans.length === 0 ? <span className="text-muted">Memuat data...</span> : null}
+                  {dbPlans.map((plan) => (
+                    <label
+                      key={plan.id}
+                      className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-ink bg-surface px-4 py-3 text-sm font-semibold has-[:checked]:bg-accent has-[:checked]:text-on-accent"
+                    >
+                      <input
+                        type="radio"
+                        name="db_type"
+                        value={plan.code}
+                        checked={form.db_type === plan.code}
+                        onChange={handleDbChange}
+                        className="h-4 w-4"
+                      />
+                      {plan.name}{' '}
+                      <span className="font-semibold opacity-85">
+                        {Number(plan.price_per_hour) === 0
+                          ? '(Gratis)'
+                          : `(+Rp ${Math.round(Number(plan.price_per_hour) * 24).toLocaleString('id-ID')}/hari)`}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
 
               {form.db_type !== 'none' && (
-                <div className="grid grid-cols-3 gap-4 text-sm text-gray-600 bg-white p-4 rounded-lg border border-gray-100 shadow-inner">
+                <dl className="grid gap-4 rounded-xl border-2 border-ink bg-paper p-4 text-sm sm:grid-cols-3">
                   <div>
-                    <strong>DB Name:</strong>
-                    <br />
-                    <span className="font-mono text-blue-600">{form.db_name}</span>
+                    <dt className="font-semibold text-muted">DB name</dt>
+                    <dd className="mt-1 font-mono font-semibold break-all">{form.db_name}</dd>
                   </div>
                   <div>
-                    <strong>DB User:</strong>
-                    <br />
-                    <span className="font-mono text-blue-600">{form.db_user}</span>
+                    <dt className="font-semibold text-muted">DB user</dt>
+                    <dd className="mt-1 font-mono font-semibold break-all">{form.db_user}</dd>
                   </div>
                   <div>
-                    <strong>DB Password:</strong>
-                    <br />
-                    <span className="font-mono text-blue-600">{form.db_password}</span>
+                    <dt className="font-semibold text-muted">DB password</dt>
+                    <dd className="mt-1 font-mono font-semibold break-all">{form.db_password}</dd>
                   </div>
-                </div>
+                </dl>
               )}
-            </div>
+            </section>
 
-            <div className="md:col-span-2 mt-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Environment Variables (.env)</label>
+            <section aria-labelledby="section-env" className="card p-6 md:p-8">
+              <h2 id="section-env" className="font-display border-b-2 border-ink pb-3 text-2xl font-bold">Environment variables</h2>
+              <label htmlFor="project-env" className="mt-6 mb-2 block text-sm font-semibold">Isi file .env</label>
               <textarea
+                id="project-env"
                 name="custom_env"
-                rows="4"
+                rows="5"
                 placeholder="APP_NAME=TugasAkhirKu&#10;API_KEY=sk_test_12345"
-                className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-mono text-sm bg-gray-50"
+                className="field font-mono text-sm"
                 value={form.custom_env}
                 onChange={handleChange}
               ></textarea>
-            </div>
+            </section>
           </div>
 
-          {/* Section 2: Estimasi Harga Live */}
-          <div className="bg-blue-600 text-white p-8 rounded-2xl shadow-md flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold flex items-center gap-2 mb-2">
-                <Calculator className="w-6 h-6" /> Estimasi Biaya
-              </h2>
-              <p className="text-blue-100 text-sm">
-                Sudah termasuk container aplikasi & database.
+          <aside className="space-y-6 lg:sticky lg:top-24">
+            <div className="rounded-2xl border-2 border-ink bg-ink p-6 text-paper shadow-block-lg">
+              <p className="text-sm font-bold tracking-wide uppercase opacity-85">Estimasi biaya</p>
+              <p className="font-display mt-3 text-5xl font-extrabold tabular-nums text-accent">
+                Rp {currentDailyRate.toLocaleString('id-ID')}
+                <span className="text-lg font-semibold text-paper opacity-85">/hari</span>
+              </p>
+              <p className="mt-3 text-sm opacity-85">Sudah termasuk container aplikasi dan database.</p>
+              <p className="mt-5 border-t-2 border-paper/20 pt-4 text-xs opacity-85">
+                Dipotong Rp {currentHourlyRate.toFixed(2)} per jam saat aktif.
               </p>
             </div>
-            <div className="text-right">
-              <span className="text-4xl font-extrabold">Rp {currentDailyRate.toLocaleString('id-ID')}</span>
-              <span className="text-blue-200">/hari</span>
-              <p className="text-xs text-blue-200 mt-1">
-                (Dipotong Rp {currentHourlyRate.toFixed(2)} / jam saat aktif)
-              </p>
-            </div>
-          </div>
 
-          <div className="flex justify-end mt-6">
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-8 py-4 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition disabled:opacity-70"
-            >
-              {loading ? 'Menyimpan...' : 'Daftarkan Aplikasi'}
+            <button type="submit" disabled={loading} className="btn-primary w-full py-4 text-lg">
+              {loading ? 'Menyimpan...' : 'Daftarkan aplikasi'}
             </button>
-          </div>
+          </aside>
         </form>
-      </div>
+      </main>
     </div>
   );
 }

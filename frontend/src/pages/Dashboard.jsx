@@ -1,48 +1,49 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import api from '../utils/api';
-import { Wallet, Plus, Server, Play, Square, LogOut, Activity, Terminal, RefreshCw, Hammer } from 'lucide-react';
+import AppLayout from '../components/AppLayout';
+import { useAuth } from '../context/auth';
 
 export default function Dashboard() {
-  const [user, setUser] = useState(null);
+  const { user, logout } = useAuth();
   const [projects, setProjects] = useState([]);
-  const navigate = useNavigate();
-  
+
   // State untuk popup log docker
   const [logModal, setLogModal] = useState({ isOpen: false, projectName: '', logs: '', loading: false });
   const [updatingIds, setUpdatingIds] = useState([]);
   const [buildingIds, setBuildingIds] = useState([]);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (!logModal.isOpen) return;
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setLogModal((m) => ({ ...m, isOpen: false }));
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [logModal.isOpen]);
 
   const fetchData = async () => {
     try {
-      const [userRes, projectsRes] = await Promise.all([
-        api.get('/user'),
-        api.get('/projects')
-      ]);
-      setUser(userRes.data);
-      setProjects(projectsRes.data);
+      const res = await api.get('/projects');
+      setProjects(res.data);
     } catch (err) {
       if (err.response?.status === 401) {
-        localStorage.removeItem('auth_token');
-        navigate('/login');
+        logout();
       }
     }
   };
 
-  const handleLogout = async () => {
-    await api.post('/logout');
-    localStorage.removeItem('auth_token');
-    navigate('/login');
-  };
+  // Muat daftar project sekali saat halaman dibuka.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDeployAction = async (projectId, action) => {
     try {
       await api.post(`/projects/${projectId}/deploy`, { action });
-      fetchData(); 
+      fetchData();
       alert(`Berhasil melakukan ${action} pada server!`);
     } catch (err) {
       alert(err.response?.data?.message || 'Gagal mengeksekusi perintah server.');
@@ -62,7 +63,7 @@ export default function Dashboard() {
       alert(latest?.status === 'success'
         ? 'Update berhasil.'
         : `Update gagal:\n${(latest?.log_output || '').slice(-800)}`);
-    } catch (err) {
+    } catch {
       setUpdatingIds((ids) => ids.filter((id) => id !== projectId));
     }
   };
@@ -95,153 +96,147 @@ export default function Dashboard() {
     try {
       const res = await api.get(`/projects/${project.id}/logs`);
       setLogModal({ isOpen: true, projectName: project.name, logs: res.data.logs, loading: false });
-    } catch (err) {
+    } catch {
       setLogModal({ isOpen: true, projectName: project.name, logs: 'Gagal mengambil log dari server.', loading: false });
     }
   };
 
-  if (!user) return <div className="p-10 text-center text-gray-500">Memuat Dashboard...</div>;
-
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-800 relative">
-      
-      {/* Top Navbar */}
-      <header className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center">
-        <div className="text-xl font-bold text-blue-700 flex items-center gap-2">
-          <Server className="w-6 h-6" /> SudoPaaS
+    <AppLayout active="dashboard">
+      <section className="grid gap-6 rounded-3xl border-2 border-ink bg-ink p-8 text-paper shadow-block md:grid-cols-[1fr_auto] md:items-center md:p-10">
+        <div>
+          <p className="text-sm font-semibold opacity-85">Saldo pay-as-you-go</p>
+          <p className="font-display mt-2 text-5xl font-extrabold tabular-nums md:text-6xl">
+            Rp {parseFloat(user?.wallet_balance ?? 0).toLocaleString('id-ID')}
+          </p>
         </div>
-        <div className="flex items-center gap-4">
-          {user.role === 'admin' && (
-            <Link to="/admin" className="px-4 py-1.5 bg-indigo-100 text-indigo-700 text-sm font-bold rounded-lg hover:bg-indigo-200 transition">
-              Panel Admin
-            </Link>
-          )}
-          <span className="text-gray-600 font-medium text-sm">Halo, {user.name}</span>
-          <button onClick={handleLogout} className="text-red-500 hover:text-red-700 flex items-center gap-1 text-sm font-semibold">
-            <LogOut className="w-4 h-4" /> Keluar
-          </button>
-        </div>
-      </header>
+        <Link to="/topup" className="btn-primary px-6 py-4 text-lg">
+          Top up saldo
+        </Link>
+      </section>
 
-      <main className="max-w-7xl mx-auto px-8 py-10">
-        
-        {/* Wallet Card */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center mb-10">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
-              <Wallet className="w-8 h-8" />
-            </div>
-            <div>
-              <p className="text-gray-500 text-sm font-medium">Saldo Pay-As-You-Go</p>
-              <h2 className="text-3xl font-bold text-gray-900">
-                Rp {parseFloat(user.wallet_balance).toLocaleString('id-ID')}
-              </h2>
-            </div>
-          </div>
-          <Link to="/topup" className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
-            <Plus className="w-5 h-5" /> Top Up Saldo
+      <div className="mt-14 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 className="font-display text-3xl font-extrabold tracking-tight">Aplikasi saya</h2>
+          <p className="mt-1 text-muted">{projects.length} project terdaftar</p>
+        </div>
+        <Link to="/projects/create" className="btn-secondary px-5 py-3 text-sm">
+          Buat project baru
+        </Link>
+      </div>
+
+      {projects.length === 0 ? (
+        <div className="mt-8 rounded-2xl border-2 border-dashed border-ink p-10 text-center">
+          <p className="font-display text-2xl font-bold">Belum ada aplikasi.</p>
+          <p className="mx-auto mt-2 max-w-md text-muted">
+            Daftarkan repositori GitHub pertamamu. Setelah itu, build dan start langsung dari sini.
+          </p>
+          <Link to="/projects/create" className="btn-primary mt-6 px-5 py-3 text-sm">
+            Daftarkan repositori
           </Link>
         </div>
+      ) : (
+        <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {projects.map((proj) => {
+            // Hasilkan nama domain aman dari nama project (huruf kecil, hapus spasi/simbol)
+            const cleanName = proj.name.toLowerCase().replace(/[^a-z0-9-]/g, '');
+            const projectUrl = `https://${cleanName}.app.launchify.site`;
 
-        {/* Projects Section */}
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-2xl font-bold text-gray-900">Aplikasi Saya</h3>
-          <Link to="/projects/create" className="px-4 py-2 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition text-sm">
-            + Buat Project Baru
-          </Link>
-        </div>
+            return (
+              <article key={proj.id} className="card flex flex-col p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <Link
+                    to={`/projects/${proj.id}`}
+                    className="min-w-0 break-all font-display text-xl font-bold underline-offset-4 hover:underline"
+                  >
+                    {proj.name}
+                  </Link>
+                  <span className={`shrink-0 rounded-md px-2.5 py-1 text-xs font-bold uppercase ${
+                    proj.status === 'active' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :
+                    proj.status === 'suspended' ? 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300' : 'bg-paper text-ink'
+                  }`}>
+                    {proj.status}
+                  </span>
+                </div>
 
-        {projects.length === 0 ? (
-          <div className="text-center py-20 bg-white border border-gray-200 rounded-2xl border-dashed">
-            <Activity className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 mb-4">Kamu belum mendaftarkan aplikasi apapun.</p>
-          </div>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((proj) => {
-              // Hasilkan nama domain aman dari nama project (huruf kecil, hapus spasi/simbol)
-              const cleanName = proj.name.toLowerCase().replace(/[^a-z0-9-]/g, '');
-              const projectUrl = `https://${cleanName}.app.launchify.site`;
-
-              return (
-                <div key={proj.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition flex flex-col">
-                  <div className="flex justify-between items-start mb-4">
-                    <Link to={`/projects/${proj.id}`} className="text-lg font-bold text-gray-900 hover:text-blue-700 hover:underline">{proj.name}</Link>
-                    <span className={`text-xs px-2 py-1 rounded font-semibold uppercase ${
-                      proj.status === 'active' ? 'bg-green-100 text-green-700' :
-                      proj.status === 'suspended' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'
-                    }`}>
-                      {proj.status}
-                    </span>
-                  </div>
-                  
-                  <div className="text-sm text-gray-600 mb-6 space-y-2 flex-1">
-                    {/* Tampilkan URL jika container sedang menyala */}
-                    {proj.status === 'active' && (
-                      <p className="truncate bg-blue-50 p-2 rounded border border-blue-100 mb-3">
-                        <strong>URL:</strong>{' '}
-                        <a href={projectUrl} target="_blank" rel="noreferrer" className="text-blue-700 font-semibold hover:underline">
+                <dl className="mt-5 flex-1 space-y-3 text-sm">
+                  {/* Tampilkan URL jika container sedang menyala */}
+                  {proj.status === 'active' && (
+                    <div className="rounded-xl border-2 border-ink bg-accent p-3 text-on-accent">
+                      <dt className="text-xs font-bold tracking-wide uppercase">URL live</dt>
+                      <dd className="mt-1 truncate font-semibold">
+                        <a href={projectUrl} target="_blank" rel="noreferrer" className="underline underline-offset-4">
                           {projectUrl}
                         </a>
-                      </p>
-                    )}
-                    <p><strong>Port User:</strong> {proj.docker_port} (Internal)</p>
-                    <p className="truncate"><strong>Repo:</strong> {proj.github_url}</p>
-                    {/* Ambil harga langsung dari database project */}
-                    <p><strong>Biaya:</strong> Rp {proj.hourly_rate}/jam</p>
-                  </div>
-
-                  <div className="flex flex-col gap-2 border-t pt-4 mt-auto">
-                    {proj.status !== 'active' && (
-                      <button onClick={() => handleBuild(proj.id)} disabled={buildingIds.includes(proj.id)} className="flex justify-center items-center gap-1 bg-amber-50 text-amber-700 py-2 rounded-lg font-semibold hover:bg-amber-100 transition disabled:opacity-60">
-                        <Hammer className="w-4 h-4" /> {buildingIds.includes(proj.id) ? 'Building...' : 'Build'}
-                      </button>
-                    )}
-                    <div className="flex gap-2">
-                    {proj.status !== 'active' ? (
-                      <button onClick={() => handleDeployAction(proj.id, 'start')} className="flex-1 flex justify-center items-center gap-1 bg-green-50 text-green-700 py-2 rounded-lg font-semibold hover:bg-green-100 transition">
-                        <Play className="w-4 h-4" /> Start
-                      </button>
-                    ) : (
-                      <button onClick={() => handleDeployAction(proj.id, 'stop')} className="flex-1 flex justify-center items-center gap-1 bg-red-50 text-red-700 py-2 rounded-lg font-semibold hover:bg-red-100 transition">
-                        <Square className="w-4 h-4" /> Stop
-                      </button>
-                    )}
-                    <button onClick={() => handleUpdate(proj.id)} disabled={updatingIds.includes(proj.id)} className="flex-1 flex justify-center items-center gap-1 bg-blue-50 text-blue-700 py-2 rounded-lg font-semibold hover:bg-blue-100 transition disabled:opacity-60">
-                      <RefreshCw className={`w-4 h-4 ${updatingIds.includes(proj.id) ? 'animate-spin' : ''}`} /> {updatingIds.includes(proj.id) ? 'Updating...' : 'Update'}
-                    </button>
-                    <button onClick={() => handleViewLogs(proj)} className="flex-1 flex justify-center items-center gap-1 bg-gray-100 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-200 transition">
-                      <Terminal className="w-4 h-4" /> Logs
-                    </button>
+                      </dd>
                     </div>
+                  )}
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-muted">Port internal</dt>
+                    <dd className="font-semibold">{proj.docker_port}</dd>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </main>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-muted">Biaya</dt>
+                    {/* Ambil harga langsung dari database project */}
+                    <dd className="font-semibold">Rp {proj.hourly_rate}/jam</dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt className="shrink-0 text-muted">Repo</dt>
+                    <dd className="min-w-0 truncate font-semibold">{proj.github_url}</dd>
+                  </div>
+                </dl>
 
-      {/* Log Modal / Terminal Mini */}
+                <div className="mt-6 flex flex-wrap gap-2 border-t-2 border-ink pt-5">
+                  {proj.status !== 'active' ? (
+                    <button onClick={() => handleDeployAction(proj.id, 'start')} className="btn-primary min-w-[8rem] flex-1 py-2.5 text-sm">
+                      Start
+                    </button>
+                  ) : (
+                    <button onClick={() => handleDeployAction(proj.id, 'stop')} className="btn-secondary min-w-[8rem] flex-1 py-2.5 text-sm text-danger">
+                      Stop
+                    </button>
+                  )}
+                  {proj.status !== 'active' && (
+                    <button onClick={() => handleBuild(proj.id)} disabled={buildingIds.includes(proj.id)} className="btn-secondary min-w-[8rem] flex-1 py-2.5 text-sm">
+                      {buildingIds.includes(proj.id) ? 'Building...' : 'Build'}
+                    </button>
+                  )}
+                  <button onClick={() => handleUpdate(proj.id)} disabled={updatingIds.includes(proj.id)} className="btn-secondary min-w-[8rem] flex-1 py-2.5 text-sm">
+                    {updatingIds.includes(proj.id) ? 'Updating...' : 'Update'}
+                  </button>
+                  <button onClick={() => handleViewLogs(proj)} className="btn-secondary min-w-[8rem] flex-1 py-2.5 text-sm">
+                    Logs
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+
       {logModal.isOpen && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-gray-900 w-full max-w-3xl rounded-xl shadow-2xl overflow-hidden border border-gray-700 flex flex-col max-h-[80vh]">
-            <div className="bg-gray-800 px-4 py-3 flex justify-between items-center border-b border-gray-700">
-              <div className="flex items-center gap-2">
-                <Terminal className="w-5 h-5 text-gray-400" />
-                <h3 className="text-gray-200 font-semibold font-mono text-sm">
-                  {logModal.projectName} - Server Logs
-                </h3>
-              </div>
-              <button onClick={() => setLogModal({ ...logModal, isOpen: false })} className="text-gray-400 hover:text-white transition">
-                ✕
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Log server ${logModal.projectName}`}
+            className="flex max-h-[80vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border-2 border-ink bg-[#0e1116] text-[#f3f0e8] shadow-block-lg"
+          >
+            <div className="flex items-center justify-between border-b-2 border-[#2c3440] px-5 py-4">
+              <h3 className="font-mono text-sm font-semibold">{logModal.projectName} - Server logs</h3>
+              <button
+                type="button"
+                onClick={() => setLogModal({ ...logModal, isOpen: false })}
+                className="rounded-lg border-2 border-[#2c3440] px-3 py-1.5 text-sm font-semibold hover:bg-[#171c24] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c7f464]"
+              >
+                Tutup
               </button>
             </div>
-            <div className="p-4 overflow-y-auto flex-1 bg-black">
+            <div className="flex-1 overflow-y-auto p-5">
               {logModal.loading ? (
-                <p className="text-green-500 font-mono animate-pulse">Mengambil log dari Oracle VPS...</p>
+                <p className="animate-pulse font-mono text-sm text-accent">Mengambil log dari server...</p>
               ) : (
-                <pre className="text-green-400 font-mono text-xs whitespace-pre-wrap leading-relaxed">
+                <pre className="font-mono text-xs leading-relaxed whitespace-pre-wrap text-accent">
                   {logModal.logs}
                 </pre>
               )}
@@ -249,6 +244,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-    </div>
+    </AppLayout>
   );
 }

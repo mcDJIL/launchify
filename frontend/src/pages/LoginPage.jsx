@@ -1,63 +1,99 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
+import ThemeToggle from '../components/ThemeToggle';
+import { useAuth } from '../context/auth';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError(null);
     try {
       const response = await api.post('/login', { email, password });
-      // Simpan token ke localStorage
-      localStorage.setItem('auth_token', response.data.access_token);
-      // Arahkan ke dashboard
-      navigate('/dashboard');
+      // Simpan token dan user ke context agar route guard langsung mengenali role
+      login(response.data.access_token, response.data.user);
+      // Admin langsung diarahkan ke dashboard admin
+      navigate(response.data.user?.role === 'admin' ? '/admin' : '/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Login gagal. Periksa kembali kredensial Anda.');
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-md">
-        <h2 className="text-2xl font-bold text-center mb-6">Masuk ke PaaS</h2>
-        
-        {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>}
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
-            <input 
-              type="email" 
-              required
-              className="mt-1 w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Password</label>
-            <input 
-              type="password" 
-              required
-              className="mt-1 w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          <button type="submit" className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition font-semibold">
-            Masuk
-          </button>
-        </form>
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Belum punya akun? <Link to="/register" className="text-blue-600 hover:underline">Daftar di sini</Link>
+    <div className="grid min-h-screen bg-paper text-ink lg:grid-cols-2">
+      <aside className="hidden flex-col justify-between bg-ink p-12 text-paper lg:flex">
+        <Link to="/" className="font-display text-2xl font-extrabold tracking-tight">
+          Launchify
+        </Link>
+        <p className="font-display max-w-md text-5xl leading-[1.05] font-extrabold">
+          Masuk untuk melanjutkan deploy dan memantau project-mu.
         </p>
-      </div>
+      </aside>
+
+      <main className="flex flex-col px-6 py-6 md:px-10">
+        <div className="flex items-center justify-between lg:justify-end">
+          <Link to="/" className="font-display text-2xl font-extrabold tracking-tight lg:hidden">
+            Launchify
+          </Link>
+          <ThemeToggle />
+        </div>
+
+        <div className="flex flex-1 items-center justify-center py-12">
+          <div className="w-full max-w-md">
+            <h1 className="font-display text-4xl font-extrabold tracking-tight">Masuk ke Launchify</h1>
+            <p className="mt-3 text-muted">Gunakan email dan password yang sudah terdaftar.</p>
+
+            {error && (
+              <div role="alert" className="mt-8 rounded-xl border-2 border-danger p-4 text-sm font-semibold text-danger">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleLogin} className="mt-8 space-y-5">
+              <div>
+                <label htmlFor="login-email" className="mb-2 block text-sm font-semibold">Email</label>
+                <input
+                  id="login-email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  className="field"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="login-password" className="mb-2 block text-sm font-semibold">Password</label>
+                <input
+                  id="login-password"
+                  type="password"
+                  required
+                  autoComplete="current-password"
+                  className="field"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              <button type="submit" className="btn-primary w-full py-3.5 text-lg">
+                Masuk
+              </button>
+            </form>
+
+            <p className="mt-8 text-sm text-muted">
+              Belum punya akun?{' '}
+              <Link to="/register" className="font-semibold text-ink underline underline-offset-4">
+                Daftar di sini
+              </Link>
+            </p>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

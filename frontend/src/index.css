@@ -1,1 +1,110 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+:root {
+  --paper: #f3f0e8;
+  --surface: #ffffff;
+  --ink: #0e1116;
+  --muted: #4a5160;
+  --hair: #d6d0c2;
+  --danger: #b42318;
+  --accent: #c7f464;
+  --on-accent: #0e1116;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --paper: #0e1116;
+  --surface: #171c24;
+  --ink: #f3f0e8;
+  --muted: #aeb6c2;
+  --hair: #2c3440;
+  --danger: #ff9b91;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-hair: var(--hair);
+  --color-danger: var(--danger);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --shadow-block: 4px 4px 0 0 var(--ink);
+  --shadow-block-lg: 8px 8px 0 0 var(--ink);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+@layer components {
+  .field {
+    @apply w-full rounded-xl border-2 border-ink bg-surface px-4 py-3 text-ink outline-none placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border-2 border-ink px-5 py-3 font-semibold transition duration-150 ease-out outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border-2 border-ink bg-accent px-5 py-3 font-semibold text-on-accent shadow-block transition duration-150 ease-out outline-none hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-block-lg active:translate-x-0 active:translate-y-0 active:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border-2 border-ink bg-surface px-5 py-3 font-semibold text-ink transition duration-150 ease-out outline-none hover:bg-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .icon-btn {
+    @apply inline-flex h-11 w-11 items-center justify-center rounded-xl border-2 border-ink bg-surface text-ink transition duration-150 ease-out outline-none hover:bg-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink;
+  }
+
+  .card {
+    @apply rounded-2xl border-2 border-ink bg-surface;
+  }
+
+  .highlight {
+    background: linear-gradient(var(--accent), var(--accent)) no-repeat 0 88% / 100% 0.42em;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.reveal {
+  animation: rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@supports (animation-timeline: view()) {
+  .reveal-on-scroll {
+    animation: rise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 35%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-on-scroll {
+    animation: none;
+  }
+}
