@@ -2,19 +2,104 @@
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="apple-touch-icon" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Launchify: cloud hosting khusus mahasiswa. Deploy aplikasi web dari GitHub dengan bayar per jam." />
+
+    <title>Launchify — Deploy Aplikasi Murah untuk Mahasiswa, Mulai Rp 42/Jam</title>
+    <meta
+      name="description"
+      content="Launchify adalah platform deploy aplikasi murah khusus mahasiswa. Hubungkan repo GitHub, bayar pakai QRIS, dan aplikasimu langsung live. Mulai Rp 42 per jam, tanpa kartu kredit."
+    />
+    <meta
+      name="keywords"
+      content="deploy murah, launch murah, hosting murah mahasiswa, deploy aplikasi gratis, cloud hosting mahasiswa, harga hosting mahasiswa, deploy github murah, paas murah indonesia, hosting tugas kuliah"
+    />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    <meta name="author" content="Launchify" />
+    <meta name="theme-color" content="#c7f464" />
+
+    <link rel="canonical" href="%VITE_SITE_URL%/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Launchify" />
+    <meta property="og:locale" content="id_ID" />
+    <meta property="og:url" content="%VITE_SITE_URL%/" />
+    <meta property="og:title" content="Launchify — Deploy Aplikasi Murah untuk Mahasiswa" />
+    <meta
+      property="og:description"
+      content="Deploy aplikasi dari GitHub dalam hitungan detik. Bayar per jam mulai Rp 42, top-up pakai QRIS, tanpa kartu kredit."
+    />
+    <meta property="og:image" content="%VITE_SITE_URL%/logo.png" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Launchify — Deploy Aplikasi Murah untuk Mahasiswa" />
+    <meta
+      name="twitter:description"
+      content="Deploy aplikasi dari GitHub dalam hitungan detik. Bayar per jam mulai Rp 42, top-up pakai QRIS."
+    />
+    <meta name="twitter:image" content="%VITE_SITE_URL%/logo.png" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <script>
       document.documentElement.dataset.theme = localStorage.getItem('launchify-theme') === 'dark' ? 'dark' : 'light';
     </script>
-    <title>Launchify</title>
+
+    <!-- Structured data: organisasi, situs, dan aplikasi -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "%VITE_SITE_URL%/#organization",
+            "name": "Launchify",
+            "url": "%VITE_SITE_URL%/",
+            "logo": "%VITE_SITE_URL%/logo.png",
+            "description": "Platform deploy aplikasi murah untuk mahasiswa dengan pembayaran per jam via QRIS."
+          },
+          {
+            "@type": "WebSite",
+            "@id": "%VITE_SITE_URL%/#website",
+            "url": "%VITE_SITE_URL%/",
+            "name": "Launchify",
+            "inLanguage": "id-ID",
+            "publisher": { "@id": "%VITE_SITE_URL%/#organization" }
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "Launchify",
+            "applicationCategory": "DeveloperApplication",
+            "operatingSystem": "Web",
+            "url": "%VITE_SITE_URL%/",
+            "description": "Deploy aplikasi web dari repositori GitHub ke cloud dengan harga per jam untuk mahasiswa.",
+            "offers": {
+              "@type": "Offer",
+              "price": "42",
+              "priceCurrency": "IDR",
+              "description": "Rp 42 per jam selama server menyala"
+            }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <h1>Launchify — Deploy aplikasi murah untuk mahasiswa</h1>
+      <p>
+        Launchify membantu mahasiswa men-deploy aplikasi web dari GitHub dengan harga mulai Rp 42 per jam. Aktifkan
+        JavaScript untuk menggunakan aplikasi ini.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

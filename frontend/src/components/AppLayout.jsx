@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { LayoutDashboard, LogOut, ShieldCheck, Wallet } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
+import Seo from './Seo';
 import { useAuth } from '../context/auth';
 import logo from '../assets/logo.png';
 
@@ -33,6 +34,7 @@ export default function AppLayout({ active, width = 'max-w-6xl', children }) {
 
   return (
     <div className="flex min-h-screen bg-paper font-sans text-ink">
+      <Seo title="Dashboard" noindex />
       <aside className="hidden w-64 shrink-0 flex-col border-r-2 border-ink bg-surface md:flex">
         <div className="flex h-20 items-center border-b-2 border-ink px-6">
           <Link to={homePath} className="font-display text-2xl font-extrabold tracking-tight flex items-center gap-2">

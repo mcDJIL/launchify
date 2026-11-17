@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
 import ThemeToggle from '../components/ThemeToggle';
+import Seo from '../components/Seo';
 import { useAuth } from '../context/auth';
 
 export default function Register() {
@@ -26,6 +27,11 @@ export default function Register() {
 
   return (
     <div className="grid min-h-screen bg-paper text-ink lg:grid-cols-2">
+      <Seo
+        title="Daftar Gratis — Deploy Aplikasi Murah untuk Mahasiswa"
+        description="Buat akun Launchify gratis dan mulai deploy aplikasi dari GitHub. Top-up via QRIS, bayar per jam mulai Rp 42, tanpa kartu kredit."
+        path="/register"
+      />
       <aside className="hidden flex-col justify-between bg-accent p-12 text-on-accent lg:flex">
         <Link to="/" className="font-display text-2xl font-extrabold tracking-tight">
           Launchify

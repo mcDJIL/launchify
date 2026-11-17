@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Halaman privat (dashboard, top-up, admin) tidak perlu diindeks.
+Disallow: /dashboard
+Disallow: /topup
+Disallow: /projects/
+Disallow: /admin
+Disallow: /login
+
+Sitemap: https://launchify.site/sitemap.xml

@@ -9,6 +9,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import TopUp from './pages/TopUp';
 import CreateProject from './pages/CreateProjects';
 import ProjectDetail from './pages/ProjectDetail';
+import Panduan from './pages/Panduan';
+import Artikel from './pages/Artikel';
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/panduan" element={<Panduan />} />
+            <Route path="/panduan/:slug" element={<Artikel />} />
 
             {/* Protected Routes - hanya user biasa */}
             <Route element={<ProtectedRoute role="user" />}>

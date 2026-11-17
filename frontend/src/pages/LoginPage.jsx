@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
 import ThemeToggle from '../components/ThemeToggle';
+import Seo from '../components/Seo';
 import { useAuth } from '../context/auth';
 
 export default function Login() {
@@ -27,6 +28,7 @@ export default function Login() {
 
   return (
     <div className="grid min-h-screen bg-paper text-ink lg:grid-cols-2">
+      <Seo title="Masuk ke Launchify" path="/login" noindex />
       <aside className="hidden flex-col justify-between bg-ink p-12 text-paper lg:flex">
         <Link to="/" className="font-display text-2xl font-extrabold tracking-tight">
           Launchify
