@@ -11,6 +11,7 @@ import TopUp from './pages/TopUp';
 import TransactionHistory from './pages/TransactionHistory';
 import CreateProject from './pages/CreateProjects';
 import ProjectDetail from './pages/ProjectDetail';
+import ProjectMetrics from './pages/ProjectMetrics';
 import Panduan from './pages/Panduan';
 import Artikel from './pages/Artikel';
 
@@ -53,6 +54,7 @@ function App() {
               <Route path="/transactions" element={<TransactionHistory />} />
               <Route path="/projects/create" element={<CreateProject />} />
               <Route path="/projects/:id" element={<ProjectDetail />} />
+              <Route path="/projects/:id/metrics" element={<ProjectMetrics />} />
             </Route>
 
             {/* Protected Routes - hanya admin */}

@@ -212,6 +212,9 @@ export default function Dashboard() {
                   <button onClick={() => handleViewLogs(proj)} className="btn-secondary min-w-[8rem] flex-1 py-2.5 text-sm">
                     Logs
                   </button>
+                  <Link to={`/projects/${proj.id}/metrics`} className="btn-secondary min-w-[8rem] flex-1 py-2.5 text-center text-sm">
+                    Metrics
+                  </Link>
                 </div>
               </article>
             );

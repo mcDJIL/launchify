@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DeploymentController;
 use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\ProjectController;
+use App\Http\Controllers\Api\ProjectMetricsController;
 use App\Http\Controllers\Api\ProjectOperationController;
 use App\Http\Controllers\Api\TopupTransactionController;
 use Illuminate\Http\Request;
@@ -38,6 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/projects/{id}/deploy', [DeploymentController::class, 'trigger']);
     Route::get('/projects/{id}/logs', [DeploymentController::class, 'logs']);
+    Route::get('/projects/{project}/metrics', [ProjectMetricsController::class, 'show']);
 
     Route::post('/projects/{project}/exec', [ProjectOperationController::class, 'execCommand']);
     Route::get('/projects/{project}/crons', [ProjectOperationController::class, 'indexCrons']);
