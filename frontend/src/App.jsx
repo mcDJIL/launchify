@@ -8,6 +8,7 @@ import Register from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import TopUp from './pages/TopUp';
+import TransactionHistory from './pages/TransactionHistory';
 import CreateProject from './pages/CreateProjects';
 import ProjectDetail from './pages/ProjectDetail';
 import Panduan from './pages/Panduan';
@@ -49,6 +50,7 @@ function App() {
             <Route element={<ProtectedRoute role="user" />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/topup" element={<TopUp />} />
+              <Route path="/transactions" element={<TransactionHistory />} />
               <Route path="/projects/create" element={<CreateProject />} />
               <Route path="/projects/:id" element={<ProjectDetail />} />
             </Route>

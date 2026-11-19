@@ -110,9 +110,14 @@ export default function Dashboard() {
             Rp {parseFloat(user?.wallet_balance ?? 0).toLocaleString('id-ID')}
           </p>
         </div>
-        <Link to="/topup" className="btn-primary px-6 py-4 text-lg">
-          Top up saldo
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link to="/topup" className="btn-primary px-6 py-4 text-lg">
+            Top up saldo
+          </Link>
+          <Link to="/transactions" className="btn-secondary px-6 py-4 text-lg">
+            Billing &amp; Wallet
+          </Link>
+        </div>
       </section>
 
       <div className="mt-14 flex flex-wrap items-end justify-between gap-4">

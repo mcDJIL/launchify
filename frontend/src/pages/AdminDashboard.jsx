@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ImageIcon, CheckCircle, RefreshCw } from 'lucide-react';
+import { ImageIcon, CheckCircle, RefreshCw, XCircle } from 'lucide-react';
 import api, { STORAGE_BASE_URL } from '../utils/api';
 import AppLayout from '../components/AppLayout';
 
@@ -37,6 +37,24 @@ export default function AdminDashboard() {
       fetchPendingTopups();
     } catch (err) {
       alert(err.response?.data?.message || 'Gagal menyetujui transaksi.');
+    }
+  };
+
+  const handleReject = async (transactionId) => {
+    // Alasan wajib diisi agar user tahu kenapa top-up-nya gagal.
+    const note = window.prompt('Alasan penolakan (akan ditampilkan ke user):', 'Nominal transfer tidak sesuai.');
+    if (note === null) return;
+    if (!note.trim()) {
+      alert('Alasan penolakan wajib diisi.');
+      return;
+    }
+
+    try {
+      await api.post(`/topup/${transactionId}/reject`, { admin_note: note.trim() });
+      alert('Transaksi ditolak.');
+      fetchPendingTopups();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Gagal menolak transaksi.');
     }
   };
 
@@ -130,12 +148,20 @@ export default function AdminDashboard() {
                       </a>
                     </td>
                     <td className="p-4 text-center">
-                      <button
-                        onClick={() => handleApprove(topup.id)}
-                        className="btn-primary px-4 py-2 text-sm"
-                      >
-                        <CheckCircle className="h-4 w-4" /> Verifikasi
-                      </button>
+                      <div className="flex flex-wrap justify-center gap-2">
+                        <button
+                          onClick={() => handleApprove(topup.id)}
+                          className="btn-primary px-4 py-2 text-sm"
+                        >
+                          <CheckCircle className="h-4 w-4" /> Verifikasi
+                        </button>
+                        <button
+                          onClick={() => handleReject(topup.id)}
+                          className="btn-secondary px-4 py-2 text-sm text-danger"
+                        >
+                          <XCircle className="h-4 w-4" /> Tolak
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

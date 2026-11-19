@@ -152,9 +152,14 @@ export default function TopUp() {
                   <p className="mx-auto mt-3 max-w-sm text-muted">
                     Transaksi Rp {parseFloat(transaction?.total_transfer).toLocaleString('id-ID')} sedang diverifikasi admin. Saldo bertambah otomatis setelah disetujui.
                   </p>
-                  <Link to="/dashboard" className="btn-secondary mt-8 px-6 py-3">
-                    Kembali ke dashboard
-                  </Link>
+                  <div className="mt-8 flex flex-wrap justify-center gap-3">
+                    <Link to="/transactions" className="btn-secondary px-6 py-3">
+                      Lihat billing &amp; wallet
+                    </Link>
+                    <Link to="/dashboard" className="btn-secondary px-6 py-3">
+                      Kembali ke dashboard
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>

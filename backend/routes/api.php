@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\BillingLedgerController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DeploymentController;
 use App\Http\Controllers\Api\PlanController;
@@ -22,6 +23,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('projects', ProjectController::class);
 
     Route::post('/topup/request', [TopupTransactionController::class, 'requestTopup']);
+    Route::get('/topup/history', [TopupTransactionController::class, 'history']);
+    Route::get('/billing/history', [BillingLedgerController::class, 'history']);
     Route::post('/topup/{id}/upload-proof', [TopupTransactionController::class, 'uploadProof']);
 
     Route::middleware(['auth:sanctum', 'admin'])->group(function () {

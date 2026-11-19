@@ -107,16 +107,35 @@ class TopupTransactionController extends Controller
     public function reject(Request $request, string $id)
     {
         // Opsional: Validasi bahwa user yang request adalah Admin (bisa via middleware nanti)
-        
+
+        $request->validate([
+            'admin_note' => 'nullable|string|max:255',
+        ]);
+
         $transaction = TopupTransaction::where('id', $id)
                             ->where('status', 'verifying')
                             ->firstOrFail();
 
-        $transaction->update(['status' => 'rejected']);
+        $transaction->update([
+            'status' => 'rejected',
+            'admin_note' => $request->input('admin_note') ?: 'Bukti transfer tidak valid atau nominal tidak sesuai.',
+        ]);
 
         return response()->json([
             'message' => 'Transaksi berhasil ditolak.',
             'data' => $transaction
+        ]);
+    }
+
+    // 4. User melihat riwayat seluruh transaksi top-up miliknya
+    public function history(Request $request)
+    {
+        $transactions = $request->user()->topups()
+                            ->latest()
+                            ->get();
+
+        return response()->json([
+            'data' => $transactions,
         ]);
     }
 }

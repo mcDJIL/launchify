@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Project;
-use App\Models\Transaction;
+use App\Models\BillingLedger;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -34,15 +34,13 @@ class ProcessHourlyBilling extends Command
                 if ((float) $user->wallet_balance >= $cost) {
                     $user->decrement('wallet_balance', $cost);
 
-                    if (class_exists(Transaction::class)) {
-                        Transaction::create([
-                            'user_id' => $user->id,
-                            'project_id' => $project->id,
-                            'type' => 'usage',
-                            'amount' => -$cost,
-                            'description' => "Biaya server 1 jam: {$project->name} (Rp 1.000/hari)",
-                        ]);
-                    }
+                    BillingLedger::create([
+                        'user_id' => $user->id,
+                        'project_id' => $project->id,
+                        'type' => 'debit',
+                        'amount' => $cost,
+                        'description' => "Biaya server 1 jam: {$project->name}",
+                    ]);
 
                     DB::commit();
                     $this->info("Project #{$project->id}: Saldo user #{$user->id} dipotong Rp {$cost}");

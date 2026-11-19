@@ -10,7 +10,7 @@ class TopupTransaction extends Model
 {
     use HasUuids, HasFactory;
 
-    protected $fillable = ['user_id', 'base_amount', 'unique_code', 'total_transfer', 'proof_image', 'status'];
+    protected $fillable = ['user_id', 'base_amount', 'unique_code', 'total_transfer', 'proof_image', 'status', 'admin_note'];
 
     public function user()
     {
