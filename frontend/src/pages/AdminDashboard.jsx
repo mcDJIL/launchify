@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ImageIcon, CheckCircle, RefreshCw } from 'lucide-react';
-import api from '../utils/api';
+import api, { STORAGE_BASE_URL } from '../utils/api';
 import AppLayout from '../components/AppLayout';
 
 export default function AdminDashboard() {
@@ -119,9 +119,9 @@ export default function AdminDashboard() {
                       Rp {parseFloat(topup.total_transfer).toLocaleString('id-ID')}
                     </td>
                     <td className="p-4">
-                      {/* URL base diarahkan ke storage lokal Laravel */}
+                      {/* URL storage mengikuti VITE_API_URL, bukan alamat lokal */}
                       <a
-                        href={`http://127.0.0.1:8000/storage/${topup.proof_image}`}
+                        href={`${STORAGE_BASE_URL}/storage/${topup.proof_image}`}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-2 text-sm font-semibold underline underline-offset-4"

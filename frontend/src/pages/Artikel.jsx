@@ -99,7 +99,7 @@ export default function Artikel() {
         jsonLd={jsonLd}
       />
 
-      <article className="px-6 pt-12 pb-20 md:pt-16">
+      <article className="px-6 pt-12 pb-20 md:px-10 md:pt-16">
         <div className="mx-auto max-w-2xl">
           <Link to="/panduan" className="inline-flex items-center gap-2 text-sm font-semibold text-muted hover:underline">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Semua panduan

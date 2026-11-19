@@ -1,10 +1,8 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Rocket } from 'lucide-react';
-import ThemeToggle from '../components/ThemeToggle';
+import PublicHeader from '../components/PublicHeader';
+import PublicFooter from '../components/PublicFooter';
 import Seo from '../components/Seo';
-import logo from '../assets/logo.png';
-import api from '../utils/api';
-import { useEffect, useState } from 'react';
 import { ARTIKEL } from '../data/artikel';
 
 const STEPS = [
@@ -87,17 +85,6 @@ const faqJsonLd = {
 };
 
 export default function LandingPage() {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      api.get('/user', { headers: { Authorization: `Bearer ${token}` } })
-        .then(res => setUser(res.data))
-        .catch(err => console.error('Gagal memuat data user:', err));
-    }
-  }, []);
-
   return (
     <div className="min-h-screen bg-paper font-sans text-ink">
       <Seo
@@ -107,40 +94,7 @@ export default function LandingPage() {
         jsonLd={faqJsonLd}
       />
 
-      <header className="sticky top-0 z-50 border-b-2 border-ink bg-paper">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4 md:px-0">
-          <Link to="/" className="font-display text-2xl font-extrabold tracking-tight flex items-center gap-2.5">
-            <img src={logo} alt="Logo Launchify" className="h-12 w-12" />
-            <span>Launchify</span>
-          </Link>
-
-          <nav aria-label="Navigasi halaman" className="hidden gap-8 text-sm font-semibold md:flex">
-            <a href="#fitur" className="underline-offset-4 hover:underline">Fitur</a>
-            <a href="#cara-kerja" className="underline-offset-4 hover:underline">Cara Kerja</a>
-            <a href="#harga" className="underline-offset-4 hover:underline">Harga</a>
-            <a href="#faq" className="underline-offset-4 hover:underline">FAQ</a>
-            <Link to="/panduan" className="underline-offset-4 hover:underline">Panduan</Link>
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            {user ? (
-              <Link to="/dashboard" className="btn-primary px-5 py-2.5 text-sm">
-                Dashboard
-              </Link>
-            ) : (
-              <>
-                <Link to="/login" className="hidden px-3 py-2 font-semibold underline-offset-4 hover:underline sm:block">
-                  Masuk
-                </Link>
-                <Link to="/register" className="btn-primary px-5 py-2.5 text-sm">
-                  Daftar Gratis
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      <PublicHeader />
 
       <section className="px-6 pt-16 pb-24 md:px-10 md:pt-24">
         <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1.4fr_1fr]">
@@ -362,18 +316,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer className="border-t-2 border-ink px-6 py-10 text-sm md:px-10">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <span className="font-display text-lg font-extrabold">Launchify</span>
-          <nav aria-label="Tautan footer" className="flex flex-wrap gap-x-6 gap-y-2 text-muted">
-            <Link to="/panduan" className="hover:underline">Panduan</Link>
-            <a href="#harga" className="hover:underline">Harga</a>
-            <a href="#faq" className="hover:underline">FAQ</a>
-            <Link to="/register" className="hover:underline">Daftar</Link>
-          </nav>
-          <p className="text-muted">© 2026 Launchify. Dibangun untuk Projek UAS Pemrograman Framework.</p>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

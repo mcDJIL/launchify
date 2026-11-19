@@ -35,7 +35,7 @@ export default function AppLayout({ active, width = 'max-w-6xl', children }) {
   return (
     <div className="flex min-h-screen bg-paper font-sans text-ink">
       <Seo title="Dashboard" noindex />
-      <aside className="hidden w-64 shrink-0 flex-col border-r-2 border-ink bg-surface md:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col overflow-y-auto border-r-2 border-ink bg-surface md:flex">
         <div className="flex h-20 items-center border-b-2 border-ink px-6">
           <Link to={homePath} className="font-display text-2xl font-extrabold tracking-tight flex items-center gap-2">
             <img src={logo} alt="Logo" className="h-8 w-8" />
@@ -90,7 +90,7 @@ export default function AppLayout({ active, width = 'max-w-6xl', children }) {
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col md:pl-64">
         <header className="flex items-center justify-between gap-4 border-b-2 border-ink bg-surface px-6 py-4 md:hidden">
           <Link to={homePath} className="font-display text-xl font-extrabold tracking-tight">
             Launchify

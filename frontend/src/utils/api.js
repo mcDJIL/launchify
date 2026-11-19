@@ -1,7 +1,12 @@
 import axios from 'axios';
 
+export const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api').replace(/\/$/, '');
+
+// Basis URL untuk file publik dari `php artisan storage:link` (tanpa segmen /api).
+export const STORAGE_BASE_URL = API_BASE_URL.replace(/\/api$/, '');
+
 const api = axios.create({
-    baseURL: 'http://127.0.0.1:8000/api', 
+    baseURL: API_BASE_URL,
     headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
