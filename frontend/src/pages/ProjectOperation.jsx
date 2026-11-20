@@ -47,6 +47,34 @@ export default function ProjectOperations({ project }) {
     }
   };
 
+  const handleGitPull = async () => {
+    setIsRunning(true);
+    setConsoleOutput('$ git pull\nMenarik perubahan terbaru dari repositori...');
+    try {
+      const res = await api.post(`/projects/${project.id}/git-pull`);
+      setConsoleOutput(`$ git pull\n\n${res.data.output || 'Selesai tanpa output.'}`);
+    } catch (err) {
+      setConsoleOutput(`Error: ${err.response?.data?.message || err.message}`);
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  const handleGitPullRebuild = async () => {
+    setIsRunning(true);
+    setConsoleOutput('$ git pull && rebuild\nMenjadwalkan update (pull + build ulang container)...');
+    try {
+      await api.post(`/projects/${project.id}/deploy`, { action: 'update' });
+      setConsoleOutput(
+        '$ git pull && rebuild\n\nUpdate dijadwalkan di background. Pantau progres di bagian "Riwayat deployment" — status jadi success kalau pull + rebuild selesai.'
+      );
+    } catch (err) {
+      setConsoleOutput(`Error: ${err.response?.data?.message || err.message}`);
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
   const handleAddCron = async (e) => {
     e.preventDefault();
     try {
@@ -100,7 +128,29 @@ export default function ProjectOperations({ project }) {
           Jalankan perintah langsung di dalam container aplikasi kamu, misalnya migrasi atau seeder.
         </p>
 
-        <div className="mt-5 flex flex-wrap gap-2">
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleGitPull}
+            disabled={isRunning}
+            className="btn-secondary px-3 py-1.5 text-xs"
+          >
+            Git pull (ambil update repo)
+          </button>
+          <button
+            type="button"
+            onClick={handleGitPullRebuild}
+            disabled={isRunning}
+            className="btn-primary px-3 py-1.5 text-xs"
+          >
+            Git pull + rebuild
+          </button>
+          <span className="text-xs text-muted">
+            Dijalankan di folder project pada server. Tombol rebuild sekaligus build ulang container agar perubahan langsung aktif.
+          </span>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
           {presetButtons.map((preset) => (
             <button
               key={preset.cmd}

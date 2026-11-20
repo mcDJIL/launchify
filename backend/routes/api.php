@@ -70,6 +70,7 @@ Route::middleware(['auth:sanctum', 'not_suspended'])->group(function () {
     Route::delete('/projects/{project}/deploy-key', [DeployKeyController::class, 'destroy']);
 
     Route::post('/projects/{project}/exec', [ProjectOperationController::class, 'execCommand']);
+    Route::post('/projects/{project}/git-pull', [ProjectOperationController::class, 'gitPull']);
     Route::get('/projects/{project}/crons', [ProjectOperationController::class, 'indexCrons']);
     Route::post('/projects/{project}/crons', [ProjectOperationController::class, 'storeCron']);
     Route::patch('/projects/{project}/crons/{cron}/toggle', [ProjectOperationController::class, 'toggleCron']);

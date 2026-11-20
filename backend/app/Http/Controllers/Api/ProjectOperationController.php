@@ -32,6 +32,40 @@ class ProjectOperationController extends Controller
         ]);
     }
 
+    // 1b. Git pull di folder kerja host (bukan di dalam container)
+    public function gitPull(Request $request, Project $project)
+    {
+        abort_if($project->user_id !== $request->user()->id, 403);
+
+        $workdir = "/var/www/paas_projects/project_{$project->id}";
+
+        if (!is_dir($workdir)) {
+            return response()->json([
+                'success' => false,
+                'output' => 'Folder project belum ada di server. Jalankan build/deploy terlebih dahulu.',
+            ], 422);
+        }
+
+        // Pakai SSH deploy key yang sama seperti saat clone.
+        $sshPrefix = '';
+        $key = $project->deployKey;
+        if ($key && is_file($key->private_key_path)) {
+            $sshPrefix = "GIT_SSH_COMMAND='ssh -i {$key->private_key_path} -o IdentitiesOnly=yes -o StrictHostKeyChecking=no' ";
+        }
+
+        $process = Process::timeout(120)->run(
+            "cd {$workdir} && {$sshPrefix}git pull --ff-only"
+        );
+
+        $output = trim($process->output() . $process->errorOutput());
+
+        return response()->json([
+            'success' => $process->successful(),
+            'exit_code' => $process->exitCode(),
+            'output' => $output ?: 'Selesai tanpa output.',
+        ]);
+    }
+
     // 2. List Cron Jobs milik Project
     public function indexCrons(Request $request, Project $project)
     {

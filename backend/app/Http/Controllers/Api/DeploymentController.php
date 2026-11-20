@@ -274,11 +274,14 @@ class DeploymentController extends Controller
             return "rm -rf {$workdir} && mkdir -p {$workdir} && cd {$workdir} && {$sshPrefix}git clone {$cloneUrl} . && cd {$appDir} && echo '{$envBase64}' | base64 -d > .env && echo '{$dockerfileBase64}' | base64 -d > Dockerfile && echo '{$composeBase64}' | base64 -d > docker-compose.yml && docker compose -p {$composeProject} build && docker compose -p {$composeProject} up -d && echo '{$nginxBase64}' | base64 -d > {$nginxConfPath} && sudo systemctl reload nginx";        
         }
         
+        // Pakai deploy key juga saat pull, agar repo private tidak gagal update.
+        [$pullSshPrefix] = $this->resolveCloneSource($project);
+
         return match($action) {
             'start' => "cd {$appDir} && docker compose -p {$composeProject} up -d && sudo systemctl reload nginx",
             'stop'  => "cd {$appDir} && docker compose -p {$composeProject} down", 
             'restart' => "cd {$appDir} && docker compose -p {$composeProject} restart",
-            'update' => "cd {$workdir} && git pull --ff-only && cd {$appDir} && docker compose -p {$composeProject} build && docker compose -p {$composeProject} up -d",
+            'update' => "cd {$workdir} && {$pullSshPrefix}git pull --ff-only && cd {$appDir} && docker compose -p {$composeProject} build && docker compose -p {$composeProject} up -d",
         };
     }
 }
