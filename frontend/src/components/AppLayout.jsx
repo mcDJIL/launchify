@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, LogOut, ShieldCheck, Wallet, ReceiptText } from 'lucide-react';
+import { LayoutDashboard, LogOut, ShieldCheck, Wallet, ReceiptText, GitBranch } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import Seo from './Seo';
 import { useAuth } from '../context/auth';
@@ -9,6 +9,7 @@ const USER_NAV = [
   { key: 'dashboard', to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { key: 'topup', to: '/topup', label: 'Top-up saldo', icon: Wallet },
   { key: 'transactions', to: '/transactions', label: 'Billing & Wallet', icon: ReceiptText },
+  { key: 'ssh-keys', to: '/settings/ssh-keys', label: 'Deploy keys', icon: GitBranch },
 ];
 
 const ADMIN_NAV = [

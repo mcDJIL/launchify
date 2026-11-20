@@ -124,6 +124,33 @@ class DeploymentController extends Controller
     }
 
     /**
+     * Pakai SSH deploy key saat clone jika project sudah punya key.
+     * URL https GitHub otomatis diubah ke bentuk SSH agar key dipakai.
+     *
+     * @return array{0: string, 1: string} [prefix perintah, url clone]
+     */
+    private function resolveCloneSource($project): array
+    {
+        $url = $project->github_url;
+        $key = $project->deployKey;
+
+        if (!$key || !is_file($key->private_key_path)) {
+            return ['', $url];
+        }
+
+        if (preg_match('#^https?://github\.com/([^/]+)/([^/]+?)(?:\.git)?/?$#i', $url, $matches)) {
+            $url = "git@github.com:{$matches[1]}/{$matches[2]}.git";
+        } elseif (!preg_match('#^(git@|ssh://)#', $url)) {
+            // Bukan repo GitHub SSH, biarkan clone seperti biasa.
+            return ['', $url];
+        }
+
+        $prefix = "GIT_SSH_COMMAND='ssh -i {$key->private_key_path} -o IdentitiesOnly=yes -o StrictHostKeyChecking=no' ";
+
+        return [$prefix, $url];
+    }
+
+    /**
      * Helper untuk merakit perintah bash/shell sesuai aksi yang diminta
      */
     private function getBashCommand($action, $project)
@@ -237,7 +264,9 @@ class DeploymentController extends Controller
             $nginxBase64 = base64_encode($nginxConfig);
 
             // 5. Perintah Bash menggunakan base64 -d di seluruh file
-            return "rm -rf {$workdir} && mkdir -p {$workdir} && cd {$workdir} && git clone {$project->github_url} . && cd {$appDir} && echo '{$envBase64}' | base64 -d > .env && echo '{$dockerfileBase64}' | base64 -d > Dockerfile && echo '{$composeBase64}' | base64 -d > docker-compose.yml && docker compose -p {$composeProject} build && docker compose -p {$composeProject} up -d && echo '{$nginxBase64}' | base64 -d > {$nginxConfPath} && sudo systemctl reload nginx";        
+            [$sshPrefix, $cloneUrl] = $this->resolveCloneSource($project);
+
+            return "rm -rf {$workdir} && mkdir -p {$workdir} && cd {$workdir} && {$sshPrefix}git clone {$cloneUrl} . && cd {$appDir} && echo '{$envBase64}' | base64 -d > .env && echo '{$dockerfileBase64}' | base64 -d > Dockerfile && echo '{$composeBase64}' | base64 -d > docker-compose.yml && docker compose -p {$composeProject} build && docker compose -p {$composeProject} up -d && echo '{$nginxBase64}' | base64 -d > {$nginxConfPath} && sudo systemctl reload nginx";        
         }
         
         return match($action) {

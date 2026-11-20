@@ -14,6 +14,7 @@ import ProjectDetail from './pages/ProjectDetail';
 import ProjectMetrics from './pages/ProjectMetrics';
 import ProjectEnv from './pages/ProjectEnv';
 import ProjectDomains from './pages/ProjectDomains';
+import DeployKeys from './pages/DeployKeys';
 import Panduan from './pages/Panduan';
 import Artikel from './pages/Artikel';
 
@@ -59,6 +60,7 @@ function App() {
               <Route path="/projects/:id/metrics" element={<ProjectMetrics />} />
               <Route path="/projects/:id/env" element={<ProjectEnv />} />
               <Route path="/projects/:id/domains" element={<ProjectDomains />} />
+              <Route path="/settings/ssh-keys" element={<DeployKeys />} />
             </Route>
 
             {/* Protected Routes - hanya admin */}

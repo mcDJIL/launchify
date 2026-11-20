@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DeploymentController;
 use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\ProjectController;
+use App\Http\Controllers\Api\DeployKeyController;
 use App\Http\Controllers\Api\ProjectDomainController;
 use App\Http\Controllers\Api\ProjectEnvController;
 use App\Http\Controllers\Api\ProjectMetricsController;
@@ -49,6 +50,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/projects/{project}/domains/{domain}', [ProjectDomainController::class, 'destroy']);
     Route::post('/projects/{project}/domains/{domain}/verify', [ProjectDomainController::class, 'verify']);
     Route::post('/projects/{project}/domains/{domain}/ssl', [ProjectDomainController::class, 'issueSsl']);
+    Route::get('/settings/ssh-keys', [DeployKeyController::class, 'index']);
+    Route::post('/projects/{project}/deploy-key', [DeployKeyController::class, 'store']);
+    Route::delete('/projects/{project}/deploy-key', [DeployKeyController::class, 'destroy']);
 
     Route::post('/projects/{project}/exec', [ProjectOperationController::class, 'execCommand']);
     Route::get('/projects/{project}/crons', [ProjectOperationController::class, 'indexCrons']);

@@ -35,4 +35,9 @@ class Project extends Model
     {
         return $this->hasMany(ProjectDomain::class);
     }
+
+    public function deployKey()
+    {
+        return $this->hasOne(ProjectDeployKey::class);
+    }
 }
