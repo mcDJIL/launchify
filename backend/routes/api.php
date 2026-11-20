@@ -57,6 +57,7 @@ Route::middleware(['auth:sanctum', 'not_suspended'])->group(function () {
 
     Route::post('/projects/{id}/deploy', [DeploymentController::class, 'trigger']);
     Route::get('/projects/{id}/logs', [DeploymentController::class, 'logs']);
+    Route::get('/projects/{project}/deployments/{deployment}', [DeploymentController::class, 'showDeployment']);
     Route::get('/projects/{project}/metrics', [ProjectMetricsController::class, 'show']);
     Route::get('/projects/{project}/env', [ProjectEnvController::class, 'show']);
     Route::put('/projects/{project}/env', [ProjectEnvController::class, 'update']);

@@ -37,6 +37,19 @@ class DeploymentController extends Controller
         }
     }
 
+    public function showDeployment(Request $request, string $projectId, string $deploymentId)
+    {
+        $project = $request->user()->projects()->findOrFail($projectId);
+        $deployment = $project->deployments()->findOrFail($deploymentId);
+
+        return response()->json([
+            'id' => $deployment->id,
+            'action' => $deployment->action,
+            'status' => $deployment->status,
+            'log_output' => $deployment->log_output,
+        ]);
+    }
+
     public function trigger(Request $request, string $projectId)
     {
         $request->validate([

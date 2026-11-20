@@ -27,11 +27,30 @@ class RunDeployment implements ShouldQueue
 
         $process = Process::fromShellCommandline($this->command);
         $process->setTimeout(1500);
-        $process->run();
+        $process->start();
+
+        // Tulis output secara bertahap agar UI bisa menampilkan live log.
+        $output = '';
+        $lastFlush = 0.0;
+
+        while ($process->isRunning()) {
+            $output .= $process->getIncrementalOutput();
+            $output .= $process->getIncrementalErrorOutput();
+
+            if (microtime(true) - $lastFlush >= 1.0) {
+                $deployment->update(['log_output' => $output]);
+                $lastFlush = microtime(true);
+            }
+
+            usleep(300000);
+        }
+
+        $output .= $process->getIncrementalOutput();
+        $output .= $process->getIncrementalErrorOutput();
 
         $deployment->update([
             'status' => $process->isSuccessful() ? 'success' : 'failed',
-            'log_output' => $process->getOutput() . $process->getErrorOutput(),
+            'log_output' => $output,
         ]);
 
         if ($process->isSuccessful()) {

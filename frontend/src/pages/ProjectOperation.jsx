@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ExternalLink } from 'lucide-react';
 import api from '../utils/api';
 
@@ -7,6 +7,8 @@ export default function ProjectOperations({ project }) {
   const [command, setCommand] = useState('');
   const [consoleOutput, setConsoleOutput] = useState('Siap menjalankan perintah di dalam container...');
   const [isRunning, setIsRunning] = useState(false);
+  const [liveDeploymentId, setLiveDeploymentId] = useState(null);
+  const consoleRef = useRef(null);
 
   // State Cron
   const [crons, setCrons] = useState([]);
@@ -19,6 +21,49 @@ export default function ProjectOperations({ project }) {
       fetchCrons();
     }
   }, [project?.id]);
+
+  // Auto-scroll console ke bawah setiap ada output baru.
+  useEffect(() => {
+    if (consoleRef.current) {
+      consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
+    }
+  }, [consoleOutput]);
+
+  // Polling live log selama deployment masih berjalan.
+  useEffect(() => {
+    if (!liveDeploymentId) return undefined;
+
+    let cancelled = false;
+
+    const poll = async () => {
+      try {
+        const res = await api.get(`/projects/${project.id}/deployments/${liveDeploymentId}`);
+        if (cancelled) return;
+
+        const { status, log_output: log } = res.data;
+        setConsoleOutput(`$ git pull && rebuild\nStatus: ${status}\n\n${log || 'Menunggu output dari server...'}`);
+
+        if (status !== 'processing' && status !== 'pending') {
+          setLiveDeploymentId(null);
+          setIsRunning(false);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setConsoleOutput(`Error mengambil log deployment: ${err.response?.data?.message || err.message}`);
+          setLiveDeploymentId(null);
+          setIsRunning(false);
+        }
+      }
+    };
+
+    poll();
+    const timer = setInterval(poll, 1500);
+
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [liveDeploymentId, project.id]);
 
   const fetchCrons = async () => {
     try {
@@ -62,15 +107,14 @@ export default function ProjectOperations({ project }) {
 
   const handleGitPullRebuild = async () => {
     setIsRunning(true);
+    setLiveDeploymentId(null);
     setConsoleOutput('$ git pull && rebuild\nMenjadwalkan update (pull + build ulang container)...');
     try {
-      await api.post(`/projects/${project.id}/deploy`, { action: 'update' });
-      setConsoleOutput(
-        '$ git pull && rebuild\n\nUpdate dijadwalkan di background. Pantau progres di bagian "Riwayat deployment" — status jadi success kalau pull + rebuild selesai.'
-      );
+      const res = await api.post(`/projects/${project.id}/deploy`, { action: 'update' });
+      setConsoleOutput('$ git pull && rebuild\nStatus: processing\n\nMenunggu output dari server...');
+      setLiveDeploymentId(res.data.data.id);
     } catch (err) {
       setConsoleOutput(`Error: ${err.response?.data?.message || err.message}`);
-    } finally {
       setIsRunning(false);
     }
   };
@@ -182,7 +226,19 @@ export default function ProjectOperations({ project }) {
           </button>
         </div>
 
-        <pre className="mt-4 min-h-[140px] overflow-x-auto rounded-xl border-2 border-ink bg-[#0e1116] p-4 font-mono text-xs whitespace-pre-wrap text-accent">
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <p className="text-xs font-bold tracking-wide uppercase text-muted">Output</p>
+          {liveDeploymentId && (
+            <span className="flex items-center gap-2 text-xs font-bold text-accent">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-accent" />
+              Live log deployment
+            </span>
+          )}
+        </div>
+        <pre
+          ref={consoleRef}
+          className="mt-2 max-h-80 min-h-[140px] overflow-auto rounded-xl border-2 border-ink bg-[#0e1116] p-4 font-mono text-xs whitespace-pre-wrap text-accent"
+        >
           {consoleOutput}
         </pre>
       </section>
