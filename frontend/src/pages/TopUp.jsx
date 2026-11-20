@@ -5,6 +5,24 @@ import api from '../utils/api';
 import AppLayout from '../components/AppLayout';
 import qris from '/qris-mcdjil.jpeg'
 
+const ALLOWED_PROOF_EXTENSIONS = ['png', 'jpg', 'jpeg'];
+const ALLOWED_PROOF_TYPES = ['image/png', 'image/jpeg'];
+
+// Validasi di sisi klien supaya file lain langsung ditolak sebelum dikirim.
+function validateProofFile(file) {
+  const extension = file.name.split('.').pop().toLowerCase();
+  if (!ALLOWED_PROOF_EXTENSIONS.includes(extension)) {
+    return 'Format file harus .png, .jpg, atau .jpeg.';
+  }
+  if (!ALLOWED_PROOF_TYPES.includes(file.type)) {
+    return 'File harus berupa gambar PNG atau JPEG.';
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    return 'Ukuran file maksimal 2 MB.';
+  }
+  return null;
+}
+
 export default function TopUp() {
   const [step, setStep] = useState(1);
   const [baseAmount, setBaseAmount] = useState('');
@@ -34,6 +52,13 @@ export default function TopUp() {
     e.preventDefault();
     if (!proofFile) {
       setError('Pilih file bukti gambar terlebih dahulu.');
+      return;
+    }
+
+    const fileError = validateProofFile(proofFile);
+    if (fileError) {
+      setError(fileError);
+      setProofFile(null);
       return;
     }
 
@@ -125,13 +150,28 @@ export default function TopUp() {
                   <div>
                     <span className="mb-2 block text-sm font-semibold">Bukti transfer (screenshot)</span>
                     <label className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-ink bg-paper p-6 text-center hover:bg-surface focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink">
-                      <span className="font-semibold">{proofFile ? proofFile.name : 'Pilih gambar .jpg atau .png'}</span>
-                      <span className="text-sm text-muted">Tap untuk memilih file</span>
+                      <span className="font-semibold">{proofFile ? proofFile.name : 'Pilih gambar .png, .jpg, atau .jpeg'}</span>
+                      <span className="text-sm text-muted">Maksimal 2 MB. Tap untuk memilih file</span>
                       <input
                         type="file"
                         className="sr-only"
-                        accept="image/jpeg, image/png, image/jpg"
-                        onChange={(e) => setProofFile(e.target.files[0])}
+                        accept="image/png, image/jpeg, .png, .jpg, .jpeg"
+                        onChange={(e) => {
+                          const file = e.target.files[0] || null;
+                          if (!file) {
+                            setProofFile(null);
+                            return;
+                          }
+                          const fileError = validateProofFile(file);
+                          if (fileError) {
+                            setError(fileError);
+                            setProofFile(null);
+                            e.target.value = '';
+                            return;
+                          }
+                          setError(null);
+                          setProofFile(file);
+                        }}
                       />
                     </label>
                   </div>

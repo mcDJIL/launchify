@@ -41,11 +41,20 @@ class TopupTransactionController extends Controller
         $transaction = $request->user()->topups()->where('status', 'pending')->findOrFail($id);
 
         $request->validate([
-            'proof_image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'proof_image' => 'required|file|mimetypes:image/jpeg,image/png|max:2048',
         ]);
 
+        // Tolak ekstensi selain png/jpg/jpeg, walau MIME-nya gambar.
+        $file = $request->file('proof_image');
+        $extension = strtolower($file->getClientOriginalExtension());
+        if (!in_array($extension, ['png', 'jpg', 'jpeg'], true)) {
+            return response()->json([
+                'message' => 'Format file harus .png, .jpg, atau .jpeg.',
+            ], 422);
+        }
+
         // Simpan file ke storage/app/public/proofs
-        $path = $request->file('proof_image')->store('proofs', 'public');
+        $path = $file->store('proofs', 'public');
 
         $transaction->update([
             'proof_image' => $path,
