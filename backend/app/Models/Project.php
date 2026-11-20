@@ -30,4 +30,9 @@ class Project extends Model
     {
         return $this->hasMany(ProjectCron::class);
     }
+
+    public function domains()
+    {
+        return $this->hasMany(ProjectDomain::class);
+    }
 }

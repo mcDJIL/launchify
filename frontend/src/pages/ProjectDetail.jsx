@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, Activity } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Activity, KeyRound, Globe } from 'lucide-react';
 import api from '../utils/api';
 import ProjectOperations from './ProjectOperation';
 import ThemeToggle from '../components/ThemeToggle';
@@ -69,9 +69,15 @@ export default function ProjectDetail() {
               {project.status}
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Link to={`/projects/${project.id}/metrics`} className="btn-secondary px-4 py-2.5 text-sm">
               <Activity className="h-4 w-4" /> Metrics
+            </Link>
+            <Link to={`/projects/${project.id}/env`} className="btn-secondary px-4 py-2.5 text-sm">
+              <KeyRound className="h-4 w-4" /> Env
+            </Link>
+            <Link to={`/projects/${project.id}/domains`} className="btn-secondary px-4 py-2.5 text-sm">
+              <Globe className="h-4 w-4" /> Domain
             </Link>
             <ThemeToggle />
           </div>

@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DeploymentController;
 use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\ProjectController;
+use App\Http\Controllers\Api\ProjectDomainController;
+use App\Http\Controllers\Api\ProjectEnvController;
 use App\Http\Controllers\Api\ProjectMetricsController;
 use App\Http\Controllers\Api\ProjectOperationController;
 use App\Http\Controllers\Api\TopupTransactionController;
@@ -40,6 +42,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/projects/{id}/deploy', [DeploymentController::class, 'trigger']);
     Route::get('/projects/{id}/logs', [DeploymentController::class, 'logs']);
     Route::get('/projects/{project}/metrics', [ProjectMetricsController::class, 'show']);
+    Route::get('/projects/{project}/env', [ProjectEnvController::class, 'show']);
+    Route::put('/projects/{project}/env', [ProjectEnvController::class, 'update']);
+    Route::get('/projects/{project}/domains', [ProjectDomainController::class, 'index']);
+    Route::post('/projects/{project}/domains', [ProjectDomainController::class, 'store']);
+    Route::delete('/projects/{project}/domains/{domain}', [ProjectDomainController::class, 'destroy']);
+    Route::post('/projects/{project}/domains/{domain}/verify', [ProjectDomainController::class, 'verify']);
+    Route::post('/projects/{project}/domains/{domain}/ssl', [ProjectDomainController::class, 'issueSsl']);
 
     Route::post('/projects/{project}/exec', [ProjectOperationController::class, 'execCommand']);
     Route::get('/projects/{project}/crons', [ProjectOperationController::class, 'indexCrons']);

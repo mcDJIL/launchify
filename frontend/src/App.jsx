@@ -12,6 +12,8 @@ import TransactionHistory from './pages/TransactionHistory';
 import CreateProject from './pages/CreateProjects';
 import ProjectDetail from './pages/ProjectDetail';
 import ProjectMetrics from './pages/ProjectMetrics';
+import ProjectEnv from './pages/ProjectEnv';
+import ProjectDomains from './pages/ProjectDomains';
 import Panduan from './pages/Panduan';
 import Artikel from './pages/Artikel';
 
@@ -55,6 +57,8 @@ function App() {
               <Route path="/projects/create" element={<CreateProject />} />
               <Route path="/projects/:id" element={<ProjectDetail />} />
               <Route path="/projects/:id/metrics" element={<ProjectMetrics />} />
+              <Route path="/projects/:id/env" element={<ProjectEnv />} />
+              <Route path="/projects/:id/domains" element={<ProjectDomains />} />
             </Route>
 
             {/* Protected Routes - hanya admin */}
