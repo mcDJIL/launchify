@@ -91,16 +91,28 @@ export default function CreateProject() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    const payload = {
+      ...form,
+      root_directory: form.root_directory || null,
+      release_command: form.release_command || null,
+    };
+
+    // Project tanpa database tidak perlu mengirim kredensial DB.
+    if (form.db_type === 'none') {
+      payload.db_name = null;
+      payload.db_user = null;
+      payload.db_password = null;
+    }
+
     try {
-      await api.post('/projects', {
-        ...form,
-        root_directory: form.root_directory || null,
-        release_command: form.release_command || null
-      });
+      await api.post('/projects', payload);
       alert('Project berhasil didaftarkan!');
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Gagal membuat project.');
+      const data = err.response?.data;
+      const fieldErrors = data?.errors ? Object.values(data.errors).flat().join(' ') : null;
+      setError(fieldErrors ? `${data.message} ${fieldErrors}` : data?.message || 'Gagal membuat project.');
     } finally {
       setLoading(false);
     }

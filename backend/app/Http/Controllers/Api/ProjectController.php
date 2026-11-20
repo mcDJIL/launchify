@@ -29,11 +29,11 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'github_url' => 'required|url',
-            'docker_port' => 'required|integer|min:1024|max:65535',
+            'docker_port' => 'required|integer|min:1|max:65535',
             'db_type' => 'required|string|exists:plans,code',
-            'db_name' => 'required|string|max:255',
-            'db_user' => 'required|string|max:255',
-            'db_password' => 'required|string|max:255',
+            'db_name' => 'nullable|required_unless:db_type,none|string|max:255',
+            'db_user' => 'nullable|required_unless:db_type,none|string|max:255',
+            'db_password' => 'nullable|required_unless:db_type,none|string|max:255',
             'framework' => 'required|string|exists:plans,code',
             'root_directory' => ['nullable', 'string', 'max:255', 'regex:/^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)*$/', 'not_regex:/(^|\/)\.\.(\/|$)/'],
             'custom_env' => 'nullable|string',
@@ -90,7 +90,7 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'github_url' => 'sometimes|url',
-            'docker_port' => 'sometimes|integer|min:1024|max:65535',
+            'docker_port' => 'sometimes|integer|min:1|max:65535',
             'host_port' => 'sometimes|integer|min:1024|max:65535'
         ]);
 
