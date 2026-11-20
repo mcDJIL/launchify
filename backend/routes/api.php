@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\AdminBillingController;
+use App\Http\Controllers\Api\AdminInfrastructureController;
+use App\Http\Controllers\Api\AdminSettingsController;
+use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\BillingLedgerController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DeploymentController;
@@ -19,7 +23,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 // Protected Routes (Wajib mengirimkan header Authorization: Bearer <token>)
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'not_suspended'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'me']);
 
@@ -38,6 +42,17 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::post('/topup/{id}/approve', [TopupTransactionController::class, 'approve']);
         Route::post('/topup/{id}/reject', [TopupTransactionController::class, 'reject']);
+        Route::get('/admin/topups/history', [TopupTransactionController::class, 'adminHistory']);
+        Route::get('/admin/infrastructure', [AdminInfrastructureController::class, 'index']);
+        Route::post('/admin/containers/stop', [AdminInfrastructureController::class, 'stopContainer']);
+        Route::get('/admin/billing-logs', [AdminBillingController::class, 'index']);
+        Route::get('/admin/users', [AdminUserController::class, 'index']);
+        Route::get('/admin/users/{user}', [AdminUserController::class, 'show']);
+        Route::post('/admin/users/{user}/credit', [AdminUserController::class, 'credit']);
+        Route::post('/admin/users/{user}/suspend', [AdminUserController::class, 'suspend']);
+        Route::get('/admin/settings', [AdminSettingsController::class, 'index']);
+        Route::put('/admin/settings', [AdminSettingsController::class, 'update']);
+        Route::put('/admin/plans/{plan}', [AdminSettingsController::class, 'updatePlan']);
     });
 
     Route::post('/projects/{id}/deploy', [DeploymentController::class, 'trigger']);

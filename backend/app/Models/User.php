@@ -19,7 +19,7 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $fillable = ['name', 'email', 'password', 'wallet_balance'];
+    protected $fillable = ['name', 'email', 'password', 'wallet_balance', 'is_suspended'];
 
     public function projects()
     {

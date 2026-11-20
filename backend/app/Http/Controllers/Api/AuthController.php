@@ -53,6 +53,13 @@ class AuthController extends Controller
             ]);
         }
 
+        // Tolak akun yang sedang disuspend admin.
+        if ($user->is_suspended) {
+            return response()->json([
+                'message' => 'Akun kamu sedang disuspend. Hubungi admin untuk informasi lebih lanjut.',
+            ], 403);
+        }
+
         // Hapus token lama jika ingin membatasi 1 device (opsional)
         // $user->tokens()->delete(); 
 

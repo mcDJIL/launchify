@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Project;
 use App\Models\BillingLedger;
+use App\Models\BillingRun;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,11 @@ class ProcessHourlyBilling extends Command
     {
         $activeProjects = Project::where('status', 'active')->get();
 
+        $charged = 0;
+        $totalCharged = 0.0;
+        $skipped = 0;
+        $suspended = 0;
+
         foreach ($activeProjects as $project) {
             $cost = (float) ($project->hourly_rate ?? 41.6667);
 
@@ -28,6 +34,7 @@ class ProcessHourlyBilling extends Command
 
                 if (!$user) {
                     DB::rollBack();
+                    $skipped++;
                     continue;
                 }
 
@@ -43,6 +50,8 @@ class ProcessHourlyBilling extends Command
                     ]);
 
                     DB::commit();
+                    $charged++;
+                    $totalCharged += $cost;
                     $this->info("Project #{$project->id}: Saldo user #{$user->id} dipotong Rp {$cost}");
                 } else {
                     DB::commit();
@@ -53,14 +62,25 @@ class ProcessHourlyBilling extends Command
 
                     Process::run("cd {$appDir} && docker compose -p {$composeProject} down");
                     $project->update(['status' => 'stopped']);
+                    $suspended++;
 
                     Log::warning("Project #{$project->id} dihentikan otomatis karena saldo user #{$user->id} habis.");
                 }
             } catch (\Throwable $e) {
                 DB::rollBack();
+                $skipped++;
                 Log::error("Billing error pada project #{$project->id}: " . $e->getMessage());
             }
         }
+
+        BillingRun::create([
+            'run_at' => now(),
+            'projects_charged' => $charged,
+            'total_charged' => $totalCharged,
+            'projects_skipped' => $skipped,
+            'projects_suspended' => $suspended,
+            'notes' => "Memproses {$activeProjects->count()} project aktif.",
+        ]);
 
         return Command::SUCCESS;
     }

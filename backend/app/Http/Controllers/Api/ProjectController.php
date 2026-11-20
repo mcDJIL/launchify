@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Plan;
 use App\Models\Project;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
@@ -18,6 +19,13 @@ class ProjectController extends Controller
 
     public function store(Request $request)
     {
+        $maxContainers = (int) Setting::get('max_containers_per_user', 3);
+        if ($request->user()->projects()->count() >= $maxContainers) {
+            return response()->json([
+                'message' => "Batas maksimal {$maxContainers} container per user sudah tercapai.",
+            ], 422);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'github_url' => 'required|url',

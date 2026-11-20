@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, LogOut, ShieldCheck, Wallet, ReceiptText, GitBranch } from 'lucide-react';
+import { LayoutDashboard, LogOut, ShieldCheck, Wallet, ReceiptText, GitBranch, Server, Users, Settings } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import Seo from './Seo';
 import { useAuth } from '../context/auth';
@@ -14,6 +14,11 @@ const USER_NAV = [
 
 const ADMIN_NAV = [
   { key: 'admin', to: '/admin', label: 'Dashboard admin', icon: ShieldCheck },
+  { key: 'admin-topups', to: '/admin/topups', label: 'Verifikasi top-up', icon: ReceiptText },
+  { key: 'admin-infra', to: '/admin/infrastructure', label: 'Infrastruktur', icon: Server },
+  { key: 'admin-billing', to: '/admin/billing-logs', label: 'Billing logs', icon: LayoutDashboard },
+  { key: 'admin-users', to: '/admin/users', label: 'Users', icon: Users },
+  { key: 'admin-settings', to: '/admin/settings', label: 'Pengaturan', icon: Settings },
 ];
 
 /**

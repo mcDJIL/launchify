@@ -138,4 +138,15 @@ class TopupTransactionController extends Controller
             'data' => $transactions,
         ]);
     }
+
+    // 5. Admin melihat seluruh transaksi (untuk audit & riwayat verifikasi)
+    public function adminHistory()
+    {
+        return response()->json([
+            'data' => TopupTransaction::with('user:id,name,email')
+                            ->latest()
+                            ->limit(100)
+                            ->get(),
+        ]);
+    }
 }

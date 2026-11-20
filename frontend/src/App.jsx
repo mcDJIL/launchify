@@ -7,6 +7,11 @@ import Login from './pages/LoginPage';
 import Register from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminTopups from './pages/AdminTopups';
+import AdminInfrastructure from './pages/AdminInfrastructure';
+import AdminBillingLogs from './pages/AdminBillingLogs';
+import AdminUsers from './pages/AdminUsers';
+import AdminSettings from './pages/AdminSettings';
 import TopUp from './pages/TopUp';
 import TransactionHistory from './pages/TransactionHistory';
 import CreateProject from './pages/CreateProjects';
@@ -66,6 +71,11 @@ function App() {
             {/* Protected Routes - hanya admin */}
             <Route element={<ProtectedRoute role="admin" />}>
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/topups" element={<AdminTopups />} />
+              <Route path="/admin/infrastructure" element={<AdminInfrastructure />} />
+              <Route path="/admin/billing-logs" element={<AdminBillingLogs />} />
+              <Route path="/admin/users" element={<AdminUsers />} />
+              <Route path="/admin/settings" element={<AdminSettings />} />
             </Route>
           </Routes>
         </div>

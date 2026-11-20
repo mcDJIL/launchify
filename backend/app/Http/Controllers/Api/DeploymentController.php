@@ -221,13 +221,18 @@ class DeploymentController extends Controller
             $envBase64 = base64_encode($envContent);
 
             // 2. Setup Dockerfile (Mengubah \\n menjadi \n untuk Base64)
-            $dockerfileContent = match($project->framework) {
+            $defaultDockerfile = match($project->framework) {
                 'laravel' => "FROM php:8.2-apache\nRUN apt-get update && apt-get install -y libpq-dev unzip git && docker-php-ext-install pdo pdo_mysql pdo_pgsql\nRUN a2enmod rewrite\nCOPY --from=composer:latest /usr/bin/composer /usr/bin/composer\nWORKDIR /var/www/html\nCOPY . .\nRUN composer install --no-dev --optimize-autoloader\nRUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache\nRUN sed -i -e 's/html/html\/public/g' /etc/apache2/sites-available/000-default.conf\nEXPOSE 80\nCMD [\"apache2-foreground\"]",                'html' => "FROM nginx:alpine\nCOPY . /usr/share/nginx/html",
                 'express' => "FROM node:18-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install\nCOPY . .\nEXPOSE {$containerPort}\nCMD [\"npm\", \"start\"]",
                 'react', 'vue' => "FROM node:18-alpine AS builder\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install\nCOPY . .\nRUN npm run build\nFROM nginx:alpine\nCOPY --from=builder /app/dist /usr/share/nginx/html\nEXPOSE 80",
                 'golang' => "FROM golang:1.21-alpine AS builder\nWORKDIR /app\nCOPY . .\nRUN go build -o main .\nFROM alpine:latest\nWORKDIR /app\nCOPY --from=builder /app/main .\nEXPOSE {$containerPort}\nCMD [\"./main\"]",
                 default => "FROM nginx:alpine\nCOPY . /usr/share/nginx/html"
             };
+
+            // Template kustom dari admin menang; {{PORT}} diganti port container.
+            $dockerfileContent = $project->plan?->dockerfile
+                ? str_replace('{{PORT}}', (string) $containerPort, $project->plan->dockerfile)
+                : $defaultDockerfile;
 
             $dockerfileBase64 = base64_encode($dockerfileContent);
 
