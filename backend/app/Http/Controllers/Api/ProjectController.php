@@ -7,6 +7,7 @@ use App\Models\Plan;
 use App\Models\Project;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Process;
 
 class ProjectController extends Controller
 {
@@ -105,6 +106,28 @@ class ProjectController extends Controller
     public function destroy(Request $request, string $id)
     {
         $project = $request->user()->projects()->findOrFail($id);
+
+        $workdir = "/var/www/paas_projects/project_{$project->id}";
+        $composeProject = "project_{$project->id}";
+        $nginxConf = "/var/www/paas_projects/nginx_configs/{$project->id}.conf";
+
+        // Hentikan dan hapus container + volume database project.
+        if (is_dir($workdir)) {
+            Process::timeout(180)->run("cd {$workdir} && docker compose -p {$composeProject} down -v --remove-orphans");
+        }
+        // Pastikan container sisa (kalau folder sudah hilang) ikut dibersihkan.
+        Process::timeout(60)->run("docker rm -f app_{$project->id} db_{$project->id}");
+
+        // Hapus folder kerja, konfigurasi nginx, dan private key deploy.
+        Process::timeout(60)->run('rm -rf ' . escapeshellarg($workdir) . ' ' . escapeshellarg($nginxConf));
+
+        $deployKey = $project->deployKey;
+        if ($deployKey && $deployKey->private_key_path) {
+            Process::timeout(30)->run('rm -f ' . escapeshellarg($deployKey->private_key_path));
+        }
+
+        Process::timeout(60)->run('sudo systemctl reload nginx');
+
         $project->delete();
 
         return response()->json(['message' => 'Project berhasil dihapus']);

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, Activity, KeyRound, Globe } from 'lucide-react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, ExternalLink, Activity, KeyRound, Globe, Trash2 } from 'lucide-react';
 import api from '../utils/api';
 import ProjectOperations from './ProjectOperation';
 import ThemeToggle from '../components/ThemeToggle';
@@ -20,8 +20,27 @@ const DEPLOYMENT_CLASS = {
 
 export default function ProjectDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [project, setProject] = useState(null);
   const [error, setError] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
+      `Hapus project "${project.name}"?\n\nContainer, database, dan semua data project ini akan dihapus permanen.`
+    );
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      await api.delete(`/projects/${project.id}`);
+      alert('Project berhasil dihapus.');
+      navigate('/dashboard');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Gagal menghapus project.');
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -79,6 +98,14 @@ export default function ProjectDetail() {
             <Link to={`/projects/${project.id}/domains`} className="btn-secondary px-4 py-2.5 text-sm">
               <Globe className="h-4 w-4" /> Domain
             </Link>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="inline-flex items-center gap-2 rounded-xl border-2 border-danger px-4 py-2.5 text-sm font-bold text-danger disabled:opacity-60"
+            >
+              <Trash2 className="h-4 w-4" /> {isDeleting ? 'Menghapus...' : 'Hapus'}
+            </button>
             <ThemeToggle />
           </div>
         </div>
